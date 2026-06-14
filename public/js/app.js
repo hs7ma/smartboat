@@ -46,7 +46,7 @@ ws.onMessage = (data) => {
 
         case 'ai_analysis_error':
             console.error('[AI] Analysis error:', data.error);
-            document.getElementById('aiWaterQuality').textContent = 'خطأ في التحليل';
+            document.getElementById('aiWaterQuality').textContent = 'Analysis Error';
             break;
 
         case 'device_status':
