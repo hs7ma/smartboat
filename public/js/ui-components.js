@@ -127,7 +127,7 @@ class UIComponents {
         title.textContent = quality.text;
 
         const pollutionLevel = analysis.pollution_level || 0;
-        const score = Math.max(0, 100 - pollutionLevel);
+        const score = analysis.water_quality === 'skipped' ? quality.score : Math.max(0, 100 - pollutionLevel);
 
         const scoreRing = document.getElementById('scoreFillRing');
         const scoreNumber = document.getElementById('scoreNumber');

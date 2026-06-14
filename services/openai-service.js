@@ -14,7 +14,17 @@ class OpenAIService {
         const now = Date.now();
         if (now - this.lastAnalysisTime < this.minInterval) {
             console.log('[OpenAI] Skipping - rate limit');
-            return { water_quality: 'skipped', pollution_level: 0, message: 'Rate limited' };
+            return {
+                water_quality: 'skipped',
+                pollution_level: 0,
+                water_color: '--',
+                turbidity_visual: '--',
+                objects_detected: [],
+                contaminants: [],
+                risk_level: 'none',
+                description: 'Analysis skipped - rate limited, awaiting next cycle',
+                recommendation: ''
+            };
         }
         this.lastAnalysisTime = now;
 
