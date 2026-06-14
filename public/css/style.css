@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
     --bg-white: #ffffff;
@@ -33,11 +33,11 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-    font-family: 'Cairo', 'Segoe UI', sans-serif;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
     background: var(--bg-light);
     color: var(--text-primary);
     min-height: 100vh;
-    direction: rtl;
+    direction: ltr;
     overflow-x: hidden;
     position: relative;
     background-image:
@@ -629,7 +629,7 @@ body {
     background: linear-gradient(135deg, rgba(37, 99, 235, 0.04), rgba(8, 145, 178, 0.02));
     border-radius: var(--radius-sm);
     border: 1px solid rgba(37, 99, 235, 0.08);
-    border-right: 4px solid var(--accent-blue);
+    border-left: 4px solid var(--accent-blue);
     margin-bottom: 12px;
     font-size: 13px;
     line-height: 1.7;

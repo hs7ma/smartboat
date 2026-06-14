@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>القارب الذكي | لوحة التحكم</title>
+    <title>Tigris eye | Dashboard</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -32,8 +32,8 @@
                     <path d="M20 10 L20 20 M17 13 L20 10 L23 13" stroke="url(#logoGrad)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
                 <div>
-                    <h1>القارب الذكي</h1>
-                    <p class="subtitle">مراقبة جودة بيئة الأنهار</p>
+                    <h1>Tigris eye</h1>
+                    <p class="subtitle">River Water Quality Monitoring</p>
                 </div>
             </div>
         </div>
@@ -46,15 +46,23 @@
                     <circle cx="12" cy="20" r="1" fill="currentColor"/>
                 </svg>
                 <span class="status-dot offline"></span>
-                <span id="wsStatusText">غير متصل</span>
+                <span id="wsStatusText">Disconnected</span>
             </div>
-            <div class="status-pill" id="deviceStatus">
+            <div class="status-pill" id="controllerStatus">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
                     <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
                 </svg>
-                <span class="status-dot offline" id="deviceDot"></span>
-                <span id="deviceStatusText">الجهاز غير متصل</span>
+                <span class="status-dot offline" id="controllerDot"></span>
+                <span id="controllerStatusText">Controller Offline</span>
+            </div>
+            <div class="status-pill" id="cameraStatus">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                    <circle cx="12" cy="13" r="4"/>
+                </svg>
+                <span class="status-dot offline" id="cameraDot"></span>
+                <span id="cameraStatusText">Camera Offline</span>
             </div>
         </div>
     </header>
@@ -68,19 +76,19 @@
                         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
                         <circle cx="12" cy="13" r="4"/>
                     </svg>
-                    بث الكاميرا
+                    Camera Feed
                 </h2>
                 <span class="badge" id="cameraTimestamp">--</span>
             </div>
             <div class="camera-container">
                 <div class="camera-live-dot" id="cameraLiveDot">LIVE</div>
-                <img id="cameraImage" src="" alt="بث الكاميرا" class="camera-feed">
+                <img id="cameraImage" src="" alt="Camera Feed" class="camera-feed">
                 <div class="camera-overlay" id="cameraOverlay">
                     <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" opacity="0.3">
                         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
                         <circle cx="12" cy="13" r="4"/>
                     </svg>
-                    <span>في انتظار البث...</span>
+                    <span>Waiting for stream...</span>
                 </div>
             </div>
         </section>
@@ -94,7 +102,7 @@
                         <circle cx="9" cy="6" r="0.5" fill="currentColor"/>
                         <circle cx="15" cy="6" r="0.5" fill="currentColor"/>
                     </svg>
-                    تحليل الذكاء الاصطناعي
+                    AI Analysis
                 </h2>
                 <span class="badge" id="aiTimestamp">--</span>
             </div>
@@ -107,13 +115,13 @@
                             <circle class="score-fill-ring" cx="60" cy="60" r="50" id="scoreFillRing"
                                     stroke-dasharray="0 314"/>
                             <text x="60" y="55" class="score-number" id="scoreNumber">--</text>
-                            <text x="60" y="72" class="score-label">جودة</text>
+                            <text x="60" y="72" class="score-label">Score</text>
                         </svg>
                     </div>
                     <div class="ai-quality-info">
-                        <h3 id="aiWaterQuality">في انتظار التحليل...</h3>
+                        <h3 id="aiWaterQuality">Waiting for analysis...</h3>
                         <div class="pollution-bar-container">
-                            <span class="pollution-label">التلوث</span>
+                            <span class="pollution-label">Pollution</span>
                             <div class="pollution-bar">
                                 <div class="pollution-bar-fill" id="pollutionBar" style="width: 0%"></div>
                             </div>
@@ -126,50 +134,50 @@
                     <div class="ai-detail-item">
                         <span class="ai-label">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
-                            لون المياه
+                            Water Color
                         </span>
                         <span id="aiWaterColor">--</span>
                     </div>
                     <div class="ai-detail-item">
                         <span class="ai-label">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
-                            العكورة المرئية
+                            Visual Turbidity
                         </span>
                         <span id="aiTurbidity">--</span>
                     </div>
                     <div class="ai-detail-item">
                         <span class="ai-label">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                            مستوى الخطر
+                            Risk Level
                         </span>
                         <span id="aiRiskLevel">--</span>
                     </div>
                     <div class="ai-detail-item">
                         <span class="ai-label">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                            الملوثات
+                            Contaminants
                         </span>
                         <div class="objects-list" id="aiContaminants">
-                            <span class="no-data">لا توجد</span>
+                            <span class="no-data">None</span>
                         </div>
                     </div>
                     <div class="ai-detail-item full-width">
                         <span class="ai-label">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                            الأجسام المكتشفة
+                            Detected Objects
                         </span>
                         <div class="objects-list" id="aiObjectsDetected">
-                            <span class="no-data">لا توجد</span>
+                            <span class="no-data">None</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="ai-description" id="aiDescription">
-                    <p>سيتم عرض وصف حالة المياه هنا بعد التحليل</p>
+                    <p>Water quality description will appear here after analysis</p>
                 </div>
                 <div class="ai-recommendation" id="aiRecommendation" style="display:none">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                    <strong>توصية:</strong> <span id="recommendationText"></span>
+                    <strong>Recommendation:</strong> <span id="recommendationText"></span>
                 </div>
             </div>
         </section>
@@ -182,7 +190,7 @@
                         <line x1="12" y1="20" x2="12" y2="4"/>
                         <line x1="6" y1="20" x2="6" y2="14"/>
                     </svg>
-                    بيانات الحساسات
+                    Sensor Data
                 </h2>
             </div>
             <div class="sensors-grid">
@@ -210,10 +218,10 @@
                             <text x="100" y="115" class="gauge-unit">ppm</text>
                         </svg>
                     </div>
-                    <h3>الأملاح الذائبة</h3>
+                    <h3>TDS - Dissolved Solids</h3>
                     <div class="sensor-range">
-                        <span>نظيف &lt;300</span>
-                        <span>متلوث &gt;900</span>
+                        <span>Clean &lt;300</span>
+                        <span>Polluted &gt;900</span>
                     </div>
                 </div>
 
@@ -246,10 +254,10 @@
                             <text x="100" y="115" class="gauge-unit">NTU</text>
                         </svg>
                     </div>
-                    <h3>العكورة</h3>
+                    <h3>Turbidity</h3>
                     <div class="sensor-range">
-                        <span>صافي &lt;5</span>
-                        <span>عكر &gt;100</span>
+                        <span>Clear &lt;5</span>
+                        <span>Turbid &gt;100</span>
                     </div>
                 </div>
 
@@ -262,7 +270,7 @@
                         </div>
                         <div class="distance-display">
                             <span class="distance-value" id="tofValue">---</span>
-                            <span class="distance-unit">سم</span>
+                            <span class="distance-unit">cm</span>
                         </div>
                         <div class="distance-bar-container">
                             <div class="distance-bar">
@@ -274,12 +282,12 @@
                                 <div class="distance-indicator" id="tofIndicator" style="left: 100%"></div>
                             </div>
                             <div class="distance-labels">
-                                <span class="label-danger">خطر</span>
-                                <span class="label-warning">تحذير</span>
-                                <span class="label-safe">آمن</span>
+                                <span class="label-danger">Danger</span>
+                                <span class="label-warning">Caution</span>
+                                <span class="label-safe">Safe</span>
                             </div>
                         </div>
-                        <h3>المسافة بالليزر</h3>
+                        <h3>Laser Distance</h3>
                     </div>
                 </div>
             </div>
@@ -292,7 +300,7 @@
                         <circle cx="12" cy="12" r="10"/>
                         <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
                     </svg>
-                    التحكم بالدفة
+                    Rudder Control
                 </h2>
                 <span class="badge" id="rudderAngleBadge">90°</span>
             </div>
@@ -314,10 +322,10 @@
 
                         <g class="tick-marks" id="tickMarks"></g>
 
-                        <text x="100" y="22" text-anchor="middle" class="compass-label-text">ش</text>
-                        <text x="100" y="190" text-anchor="middle" class="compass-label-text">ج</text>
-                        <text x="12" y="104" text-anchor="middle" class="compass-label-text">ي</text>
-                        <text x="188" y="104" text-anchor="middle" class="compass-label-text">م</text>
+                        <text x="100" y="22" text-anchor="middle" class="compass-label-text">N</text>
+                        <text x="100" y="190" text-anchor="middle" class="compass-label-text">S</text>
+                        <text x="12" y="104" text-anchor="middle" class="compass-label-text">W</text>
+                        <text x="188" y="104" text-anchor="middle" class="compass-label-text">E</text>
 
                         <g id="rudderNeedleSvg" filter="url(#needleShadow)">
                             <line x1="100" y1="100" x2="100" y2="30" stroke="url(#needleGrad)" stroke-width="4" stroke-linecap="round"/>
@@ -336,22 +344,22 @@
                     <div class="rudder-buttons">
                         <button class="btn btn-rudder" onclick="sendRudderCommand(30)">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
-                            يسار
+                            Hard Left
                         </button>
                         <button class="btn btn-rudder" onclick="sendRudderCommand(60)">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                            يسار
+                            Left
                         </button>
                         <button class="btn btn-rudder btn-center" onclick="sendRudderCommand(90)">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/></svg>
-                            وسط
+                            Center
                         </button>
                         <button class="btn btn-rudder" onclick="sendRudderCommand(120)">
-                            يمين
+                            Right
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                         </button>
                         <button class="btn btn-rudder" onclick="sendRudderCommand(150)">
-                            يمين
+                            Hard Right
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
                         </button>
                     </div>
@@ -360,7 +368,7 @@
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                             </svg>
-                            تجنب تلقائي للعقبات
+                            Auto Obstacle Avoidance
                         </span>
                     </div>
                 </div>

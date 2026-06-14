@@ -14,7 +14,8 @@ ws.onOpen = () => {
 
 ws.onClose = () => {
     ui.setConnectionStatus(false);
-    ui.setDeviceStatus(false);
+    ui.setControllerStatus(false);
+    ui.setCameraStatus(false);
 };
 
 ws.onMessage = (data) => {
@@ -49,7 +50,14 @@ ws.onMessage = (data) => {
             break;
 
         case 'device_status':
-            ui.setDeviceStatus(data.status === 'connected');
+            if (data.device === 'controller') {
+                ui.setControllerStatus(data.status === 'connected');
+            } else if (data.device === 'camera') {
+                ui.setCameraStatus(data.status === 'connected');
+            } else {
+                // Legacy fallback
+                ui.setControllerStatus(data.status === 'connected');
+            }
             break;
     }
 };

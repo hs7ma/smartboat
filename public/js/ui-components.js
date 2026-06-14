@@ -88,7 +88,7 @@ class UIComponents {
             needle.style.transform = `rotate(${rotation}deg)`;
         }
         if (badge) badge.innerHTML = `${angle}&deg;`;
-        if (compassText) compassText.textContent = `${angle}°`;
+        if (compassText) compassText.textContent = `${angle}\u00B0`;
 
         if (ripple) {
             ripple.classList.remove('active');
@@ -105,7 +105,7 @@ class UIComponents {
 
         img.src = `data:image/jpeg;base64,${base64Image}`;
         overlay.classList.add('hidden');
-        timestamp.textContent = new Date().toLocaleTimeString('ar-EG');
+        timestamp.textContent = new Date().toLocaleTimeString();
 
         if (liveDot) {
             liveDot.classList.add('visible');
@@ -114,12 +114,12 @@ class UIComponents {
 
     updateAIAnalysis(analysis) {
         const qualityMap = {
-            'clean': { text: 'نظيف - جيد', class: 'clean', score: 90 },
-            'slightly_polluted': { text: 'ملوث قليلاً', class: 'slightly_polluted', score: 70 },
-            'polluted': { text: 'ملوث', class: 'polluted', score: 45 },
-            'heavily_polluted': { text: 'ملوث بشدة', class: 'heavily_polluted', score: 25 },
-            'dangerous': { text: 'خطر!', class: 'dangerous', score: 10 },
-            'skipped': { text: 'جاري التحليل...', class: 'clean', score: 0 }
+            'clean': { text: 'Clean - Good', class: 'clean', score: 90 },
+            'slightly_polluted': { text: 'Slightly Polluted', class: 'slightly_polluted', score: 70 },
+            'polluted': { text: 'Polluted', class: 'polluted', score: 45 },
+            'heavily_polluted': { text: 'Heavily Polluted', class: 'heavily_polluted', score: 25 },
+            'dangerous': { text: 'Dangerous!', class: 'dangerous', score: 10 },
+            'skipped': { text: 'Analyzing...', class: 'clean', score: 0 }
         };
 
         const quality = qualityMap[analysis.water_quality] || qualityMap['clean'];
@@ -171,7 +171,7 @@ class UIComponents {
             objectsEl.innerHTML = analysis.objects_detected
                 .map(obj => `<span class="object-tag">${obj}</span>`).join('');
         } else {
-            objectsEl.innerHTML = '<span class="no-data">لا توجد</span>';
+            objectsEl.innerHTML = '<span class="no-data">None</span>';
         }
 
         const contaminantsEl = document.getElementById('aiContaminants');
@@ -179,13 +179,13 @@ class UIComponents {
             contaminantsEl.innerHTML = analysis.contaminants
                 .map(c => `<span class="contaminant-tag">${c}</span>`).join('');
         } else {
-            contaminantsEl.innerHTML = '<span class="no-data">لا توجد</span>';
+            contaminantsEl.innerHTML = '<span class="no-data">None</span>';
         }
 
         if (analysis.description) {
             document.getElementById('aiDescription').innerHTML = `<p>${analysis.description}</p>`;
         } else {
-            document.getElementById('aiDescription').innerHTML = '<p>في انتظار التحليل...</p>';
+            document.getElementById('aiDescription').innerHTML = '<p>Waiting for analysis...</p>';
         }
 
         const recEl = document.getElementById('aiRecommendation');
@@ -197,7 +197,7 @@ class UIComponents {
             recEl.style.display = 'none';
         }
 
-        document.getElementById('aiTimestamp').textContent = new Date().toLocaleTimeString('ar-EG');
+        document.getElementById('aiTimestamp').textContent = new Date().toLocaleTimeString();
     }
 
     setConnectionStatus(connected) {
@@ -205,22 +205,36 @@ class UIComponents {
         const statusText = document.getElementById('wsStatusText');
         if (connected) {
             statusDot.className = 'status-dot online';
-            statusText.textContent = 'متصل';
+            statusText.textContent = 'Connected';
         } else {
             statusDot.className = 'status-dot offline';
-            statusText.textContent = 'غير متصل';
+            statusText.textContent = 'Disconnected';
         }
     }
 
-    setDeviceStatus(connected) {
-        const deviceDot = document.getElementById('deviceDot');
-        const deviceText = document.getElementById('deviceStatusText');
+    setControllerStatus(connected) {
+        const deviceDot = document.getElementById('controllerDot');
+        const deviceText = document.getElementById('controllerStatusText');
+        if (!deviceDot || !deviceText) return;
         if (connected) {
             deviceDot.className = 'status-dot online';
-            deviceText.textContent = 'الجهاز متصل';
+            deviceText.textContent = 'Controller Online';
         } else {
             deviceDot.className = 'status-dot offline';
-            deviceText.textContent = 'غير متصل';
+            deviceText.textContent = 'Controller Offline';
+        }
+    }
+
+    setCameraStatus(connected) {
+        const cameraDot = document.getElementById('cameraDot');
+        const cameraText = document.getElementById('cameraStatusText');
+        if (!cameraDot || !cameraText) return;
+        if (connected) {
+            cameraDot.className = 'status-dot online';
+            cameraText.textContent = 'Camera Online';
+        } else {
+            cameraDot.className = 'status-dot offline';
+            cameraText.textContent = 'Camera Offline';
         }
     }
 }

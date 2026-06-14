@@ -45,7 +45,7 @@ app.get('*', (req, res) => {
 
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`========================================`);
-    console.log(`  Smart Boat Server`);
+    console.log(`  Tigris eye Server`);
     console.log(`  HTTP: http://localhost:${PORT}`);
     console.log(`  WebSocket: ws://localhost:${PORT}/ws`);
     console.log(`  OpenAI: ${process.env.OPENAI_API_KEY ? 'Configured' : 'NOT configured'}`);

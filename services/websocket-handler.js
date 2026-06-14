@@ -3,16 +3,15 @@ const OpenAIService = require('./openai-service');
 
 class WebSocketHandler {
     constructor(server) {
-        this.wss = new WebSocket.Server({ server, path: '/ws' });
+        this.wss = new WebSocket.Server({ server, path: '/ws', maxPayload: 10 * 1024 * 1024 });
         this.openaiService = new OpenAIService();
-        this.esp32Client = null;
+        this.controllerClient = null;
+        this.cameraClient = null;
         this.dashboardClients = new Set();
-        this.imageBuffer = '';
-        this.isReceivingImage = false;
 
         this.wss.on('connection', (ws, req) => this.handleConnection(ws, req));
 
-        console.log('[WS] WebSocket server initialized on /ws');
+        console.log('[WS] WebSocket server initialized on /ws (max payload: 10MB)');
     }
 
     handleConnection(ws, req) {
@@ -26,14 +25,41 @@ class WebSocketHandler {
                 const message = data.toString();
 
                 if (message.includes('"device_info"')) {
-                    clientType = 'esp32';
-                    this.esp32Client = ws;
-                    console.log('[WS] ESP32 device registered');
-                    this.broadcastToDashboards(JSON.stringify({
-                        type: 'device_status',
-                        status: 'connected',
-                        firmware: '1.0.0'
-                    }));
+                    const deviceInfo = JSON.parse(message);
+                    const device = deviceInfo.device || 'unknown';
+                    
+                    if (device === 'controller_module') {
+                        clientType = 'controller';
+                        this.controllerClient = ws;
+                        console.log('[WS] Controller module (ESP32-S3) registered');
+                        this.broadcastToDashboards(JSON.stringify({
+                            type: 'device_status',
+                            device: 'controller',
+                            status: 'connected',
+                            firmware: deviceInfo.firmware || '1.0.0'
+                        }));
+                    } else if (device === 'camera_module') {
+                        clientType = 'camera';
+                        this.cameraClient = ws;
+                        console.log('[WS] Camera module (ESP32-CAM) registered');
+                        this.broadcastToDashboards(JSON.stringify({
+                            type: 'device_status',
+                            device: 'camera',
+                            status: 'connected',
+                            firmware: deviceInfo.firmware || '1.0.0'
+                        }));
+                    } else {
+                        // Legacy fallback for old firmware
+                        clientType = 'esp32';
+                        this.controllerClient = ws;
+                        console.log('[WS] Legacy ESP32 device registered');
+                        this.broadcastToDashboards(JSON.stringify({
+                            type: 'device_status',
+                            device: 'controller',
+                            status: 'connected',
+                            firmware: '1.0.0'
+                        }));
+                    }
                     return;
                 }
 
@@ -55,9 +81,9 @@ class WebSocketHandler {
                 }
 
                 if (message.includes('"rudder_command"')) {
-                    if (this.esp32Client && this.esp32Client.readyState === WebSocket.OPEN) {
-                        this.esp32Client.send(message);
-                        console.log('[WS] Rudder command forwarded to ESP32');
+                    if (this.controllerClient && this.controllerClient.readyState === WebSocket.OPEN) {
+                        this.controllerClient.send(message);
+                        console.log('[WS] Rudder command forwarded to controller');
                     }
                     return;
                 }
@@ -68,11 +94,20 @@ class WebSocketHandler {
         });
 
         ws.on('close', () => {
-            if (clientType === 'esp32') {
-                this.esp32Client = null;
-                console.log('[WS] ESP32 disconnected');
+            if (clientType === 'controller' || clientType === 'esp32') {
+                this.controllerClient = null;
+                console.log('[WS] Controller module disconnected');
                 this.broadcastToDashboards(JSON.stringify({
                     type: 'device_status',
+                    device: 'controller',
+                    status: 'disconnected'
+                }));
+            } else if (clientType === 'camera') {
+                this.cameraClient = null;
+                console.log('[WS] Camera module disconnected');
+                this.broadcastToDashboards(JSON.stringify({
+                    type: 'device_status',
+                    device: 'camera',
                     status: 'disconnected'
                 }));
             } else if (clientType === 'dashboard') {
@@ -106,7 +141,7 @@ class WebSocketHandler {
         try {
             const data = JSON.parse(message);
             if (data.image) {
-                console.log('[WS] Image received from ESP32, size:', data.image.length);
+                console.log('[WS] Image received from camera module, size:', data.image.length);
 
                 this.broadcastToDashboards(JSON.stringify({
                     type: 'camera_image',
@@ -149,9 +184,9 @@ class WebSocketHandler {
         });
     }
 
-    sendToEsp32(message) {
-        if (this.esp32Client && this.esp32Client.readyState === WebSocket.OPEN) {
-            this.esp32Client.send(message);
+    sendToController(message) {
+        if (this.controllerClient && this.controllerClient.readyState === WebSocket.OPEN) {
+            this.controllerClient.send(message);
             return true;
         }
         return false;

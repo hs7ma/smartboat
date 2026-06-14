@@ -1,7 +1,7 @@
 {
-  "name": "smartboat-server",
+  "name": "tigris-eye-server",
   "version": "1.0.0",
-  "description": "Smart Boat - River Water Quality Monitoring Server",
+  "description": "Tigris eye - River Water Quality Monitoring Server",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
