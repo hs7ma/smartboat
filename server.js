@@ -16,7 +16,8 @@ app.use(express.json({ limit: '50mb' }));
 app.get('/api/status', (req, res) => {
     res.json({
         status: 'online',
-        esp32_connected: wsHandler.esp32Client !== null,
+        controller_connected: wsHandler.controllerClient !== null,
+        camera_connected: wsHandler.cameraClient !== null,
         dashboard_clients: wsHandler.dashboardClients.size,
         openai_configured: !!process.env.OPENAI_API_KEY,
         timestamp: Date.now()
@@ -28,14 +29,14 @@ app.post('/api/rudder', (req, res) => {
     if (angle === undefined || angle < 30 || angle > 150) {
         return res.status(400).json({ error: 'Angle must be between 30 and 150' });
     }
-    const sent = wsHandler.sendToEsp32(JSON.stringify({
+    const sent = wsHandler.sendToController(JSON.stringify({
         type: 'rudder_command',
         angle: angle
     }));
     if (sent) {
         res.json({ success: true, angle });
     } else {
-        res.status(503).json({ error: 'ESP32 not connected' });
+        res.status(503).json({ error: 'Controller not connected' });
     }
 });
 
