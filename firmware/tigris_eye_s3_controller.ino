@@ -1,7 +1,7 @@
 /*
  * ============================================================
  *   Tigris eye Controller Module - ESP32-S3
- *   Main Controller: Sensors, Servo, Obstacle Avoidance
+ *   Main Controller: Sensors, Servo, Obstacle Avoidance, GPS
  * ============================================================
  *
  * Components:
@@ -10,9 +10,17 @@
  *   - Turbidity Sensor V1.0 (Analog) on GPIO2
  *   - VL53L0X TOF Laser Distance Sensor (I2C on GPIO4/GPIO5)
  *   - Servo Motor (Rudder) on GPIO14
- * 
+ *   - NEO-M8N / NEO-8M GPS (UART1) on GPIO17 RX / GPIO18 TX
+ *
+ * GPS wiring:
+ *   GPS TX -> ESP32 GPIO17 (RX)
+ *   GPS RX -> ESP32 GPIO18 (TX)  [optional for RX-only]
+ *   GPS VCC -> 3.3V or 5V per module
+ *   GPS GND -> GND
+ *
  * IMPORTANT: This module does NOT use camera. Camera is handled
  *            by a separate ESP32-CAM node.
+ * Library: TinyGPSPlus (Arduino Library Manager)
  */
 
 #include <WiFi.h>
@@ -20,6 +28,7 @@
 #include <VL53L0X.h>
 #include <Wire.h>
 #include <ESP32Servo.h>
+#include <TinyGPSPlus.h>
 
 // ==================== CONFIGURATION ====================
 
@@ -36,6 +45,8 @@
 #define SERVO_PIN           14      // Servo PWM
 #define I2C_SDA             4       // I2C SDA
 #define I2C_SCL             5       // I2C SCL
+#define GPS_RX_PIN          17      // ESP32 RX <- GPS TX
+#define GPS_TX_PIN          18      // ESP32 TX -> GPS RX
 
 // ==================== CONSTANTS ====================
 
@@ -56,22 +67,32 @@
 #define SENSOR_INTERVAL_MS     1000
 #define WS_RECONNECT_MS        5000
 #define WIFI_RETRY_MS          500
+#define GPS_BAUD               9600
 
 // ==================== GLOBAL OBJECTS ====================
 
 WebSocketsClient webSocket;
 VL53L0X tofSensor;
 Servo rudderServo;
+HardwareSerial GPS_Serial(1);
+TinyGPSPlus gps;
 
 // ==================== STATE VARIABLES ====================
 
 unsigned long lastSensorRead   = 0;
 bool tofReady                  = false;
+bool gpsReady                  = false;
+bool gpsFix                    = false;
 bool wsConnected               = false;
 bool avoidDirectionLeft        = true;
 float currentTDS               = 0;
 float currentTurbidity         = 0;
 float currentDistance           = 0;
+double gpsLat                  = 0;
+double gpsLng                  = 0;
+float gpsAlt                   = 0;
+int gpsSatellites              = 0;
+float gpsSpeed                 = 0;
 int currentRudderAngle         = SERVO_CENTER;
 int wsReconnectAttempts        = 0;
 unsigned long bootTime         = 0;
@@ -192,6 +213,33 @@ float readTOF() {
     return (sum / validCount) / 10.0;
 }
 
+// ==================== GPS (NEO-M8N / NEO-8M) ====================
+
+void pollGPS() {
+    if (!gpsReady) return;
+
+    while (GPS_Serial.available() > 0) {
+        gps.encode(GPS_Serial.read());
+    }
+
+    if (gps.location.isValid()) {
+        gpsFix = true;
+        gpsLat = gps.location.lat();
+        gpsLng = gps.location.lng();
+        if (gps.altitude.isValid()) {
+            gpsAlt = gps.altitude.meters();
+        }
+        if (gps.satellites.isValid()) {
+            gpsSatellites = gps.satellites.value();
+        }
+        if (gps.speed.isValid()) {
+            gpsSpeed = gps.speed.kmph();
+        }
+    } else {
+        gpsFix = false;
+    }
+}
+
 // ==================== SERVO RUDDER CONTROL ====================
 
 void setRudderAngle(int angle) {
@@ -237,7 +285,17 @@ void sendSensorData() {
     json += "\"tds\":" + String(currentTDS, 1) + ",";
     json += "\"turbidity\":" + String(currentTurbidity, 1) + ",";
     json += "\"tof_distance\":" + String(currentDistance, 1) + ",";
-    json += "\"rudder_angle\":" + String(currentRudderAngle) + "}";
+    json += "\"rudder_angle\":" + String(currentRudderAngle) + ",";
+    json += "\"gps_fix\":";
+    json += gpsFix ? "true" : "false";
+    if (gpsFix) {
+        json += ",\"gps_lat\":" + String(gpsLat, 6);
+        json += ",\"gps_lng\":" + String(gpsLng, 6);
+        json += ",\"gps_alt\":" + String(gpsAlt, 1);
+        json += ",\"gps_satellites\":" + String(gpsSatellites);
+        json += ",\"gps_speed\":" + String(gpsSpeed, 1);
+    }
+    json += "}";
     
     webSocket.sendTXT(json);
 }
@@ -381,6 +439,17 @@ void setup() {
         Serial.println("  Check: wiring, I2C address, power");
         Serial.println("  Continuing without distance sensor...");
     }
+
+    // ===== GPS =====
+    printSection("GPS (NEO-M8N / NEO-8M)");
+    Serial.printf("  UART1 RX: GPIO%d <- GPS TX\n", GPS_RX_PIN);
+    Serial.printf("  UART1 TX: GPIO%d -> GPS RX\n", GPS_TX_PIN);
+    Serial.printf("  Baud: %d\n", GPS_BAUD);
+    GPS_Serial.begin(GPS_BAUD, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
+    delay(100);
+    gpsReady = true;
+    Serial.println("  [OK] GPS UART initialized (soft-fail if no module)");
+    Serial.println("  Waiting for satellite fix outdoors (30-90s typical)...");
     
     // ===== WiFi =====
     bool wifiOk = connectWiFi();
@@ -393,6 +462,7 @@ void setup() {
     // ===== Summary =====
     printSection("SYSTEM STATUS");
     Serial.printf("  TOF Sensor:   %s\n", tofReady ? "OK" : "FAILED");
+    Serial.printf("  GPS UART:     %s\n", gpsReady ? "OK" : "FAILED");
     Serial.printf("  Servo:        OK (GPIO%d)\n", SERVO_PIN);
     Serial.printf("  WiFi:         %s\n", wifiOk ? "OK" : "FAILED");
     Serial.printf("  WebSocket:    Connecting...\n");
@@ -400,6 +470,7 @@ void setup() {
     Serial.printf("  Boot time:    %lu ms\n", millis() - bootTime);
     Serial.println();
     Serial.println("  Sensing:  every 1 second");
+    Serial.println("  GPS:      non-blocking UART poll each loop");
     Serial.println("  Rudder:   auto obstacle avoidance");
     Serial.println();
     Serial.println("========== Starting main loop ==========");
@@ -410,6 +481,7 @@ void setup() {
 
 void loop() {
     webSocket.loop();
+    pollGPS();
     
     unsigned long now = millis();
     
@@ -421,8 +493,14 @@ void loop() {
         currentTurbidity = readTurbidity();
         currentDistance = readTOF();
         
-        Serial.printf("[SENS] TDS=%.1f ppm | Turb=%.1f NTU | Dist=%.1f cm | Rudder=%d°\n",
-                      currentTDS, currentTurbidity, currentDistance, currentRudderAngle);
+        if (gpsFix) {
+            Serial.printf("[SENS] TDS=%.1f ppm | Turb=%.1f NTU | Dist=%.1f cm | Rudder=%d° | GPS=%.6f,%.6f sats=%d\n",
+                          currentTDS, currentTurbidity, currentDistance, currentRudderAngle,
+                          gpsLat, gpsLng, gpsSatellites);
+        } else {
+            Serial.printf("[SENS] TDS=%.1f ppm | Turb=%.1f NTU | Dist=%.1f cm | Rudder=%d° | GPS=No Fix\n",
+                          currentTDS, currentTurbidity, currentDistance, currentRudderAngle);
+        }
         
         handleObstacleAvoidance(currentDistance);
         sendSensorData();

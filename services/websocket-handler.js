@@ -130,6 +130,12 @@ class WebSocketHandler {
                 turbidity: data.turbidity,
                 tof_distance: data.tof_distance,
                 rudder_angle: data.rudder_angle,
+                gps_fix: data.gps_fix ?? false,
+                gps_lat: data.gps_lat,
+                gps_lng: data.gps_lng,
+                gps_alt: data.gps_alt,
+                gps_satellites: data.gps_satellites,
+                gps_speed: data.gps_speed,
                 timestamp: Date.now()
             }));
         } catch (e) {
