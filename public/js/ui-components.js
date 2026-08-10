@@ -7,8 +7,12 @@ class UIComponents {
         this.trailPoints = [];
         this.maxTrailPoints = 200;
         this.defaultCenter = [33.3152, 44.3661]; // Baghdad
+        this.reviewImages = [];
+        this.selectedReviewId = null;
         this.generateCompassTicks();
         this.initMap();
+        this.bindReviewControls();
+        this.loadReviewImages();
     }
 
     generateCompassTicks() {
@@ -332,5 +336,129 @@ class UIComponents {
             cameraDot.className = 'status-dot offline';
             cameraText.textContent = 'Camera Offline';
         }
+    }
+
+    bindReviewControls() {
+        const refreshBtn = document.getElementById('reviewRefreshBtn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => this.loadReviewImages());
+        }
+    }
+
+    async loadReviewImages() {
+        const grid = document.getElementById('reviewGrid');
+        if (!grid) return;
+
+        try {
+            const res = await fetch('/api/images?limit=30');
+            const data = await res.json();
+            this.reviewImages = Array.isArray(data.images) ? data.images : [];
+            this.renderReviewGrid();
+
+            if (this.selectedReviewId) {
+                const stillThere = this.reviewImages.some((img) => img.id === this.selectedReviewId);
+                if (stillThere) {
+                    this.selectReviewImage(this.selectedReviewId);
+                } else if (this.reviewImages[0]) {
+                    this.selectReviewImage(this.reviewImages[0].id);
+                } else {
+                    this.clearReviewDetail();
+                }
+            } else if (this.reviewImages[0]) {
+                this.selectReviewImage(this.reviewImages[0].id);
+            }
+        } catch (err) {
+            console.error('[Review] Failed to load images:', err);
+            grid.innerHTML = '<div class="review-empty">Failed to load saved images</div>';
+        }
+    }
+
+    renderReviewGrid() {
+        const grid = document.getElementById('reviewGrid');
+        if (!grid) return;
+
+        if (!this.reviewImages.length) {
+            grid.innerHTML = '<div class="review-empty" id="reviewEmpty">No saved images yet. Captures appear after AI analysis.</div>';
+            return;
+        }
+
+        grid.innerHTML = this.reviewImages.map((img) => {
+            const active = img.id === this.selectedReviewId ? ' active' : '';
+            const quality = img.water_quality || 'unknown';
+            const when = img.created_at ? new Date(img.created_at).toLocaleString() : '--';
+            return `
+                <button type="button" class="review-thumb${active}" data-id="${img.id}">
+                    <img src="${img.public_url}" alt="${quality}" loading="lazy">
+                    <div class="review-thumb-meta">
+                        <span class="review-thumb-quality">${quality}</span>
+                        <span>${when}</span>
+                    </div>
+                </button>
+            `;
+        }).join('');
+
+        grid.querySelectorAll('.review-thumb').forEach((btn) => {
+            btn.addEventListener('click', () => this.selectReviewImage(btn.dataset.id));
+        });
+    }
+
+    selectReviewImage(id) {
+        const img = this.reviewImages.find((item) => item.id === id);
+        if (!img) return;
+
+        this.selectedReviewId = id;
+        this.renderReviewGrid();
+
+        const placeholder = document.getElementById('reviewDetailPlaceholder');
+        const content = document.getElementById('reviewDetailContent');
+        const detailImage = document.getElementById('reviewDetailImage');
+        if (placeholder) placeholder.hidden = true;
+        if (content) content.hidden = false;
+        if (detailImage) {
+            detailImage.src = img.public_url;
+        }
+
+        const qualityEl = document.getElementById('reviewQuality');
+        const pollutionEl = document.getElementById('reviewPollution');
+        const riskEl = document.getElementById('reviewRisk');
+        const timeEl = document.getElementById('reviewTime');
+        const gpsEl = document.getElementById('reviewGps');
+        const descEl = document.getElementById('reviewDescription');
+
+        if (qualityEl) qualityEl.textContent = img.water_quality || '--';
+        if (pollutionEl) {
+            pollutionEl.textContent = img.pollution_level != null ? `${img.pollution_level}%` : '--';
+        }
+        if (riskEl) riskEl.textContent = img.risk_level || '--';
+        if (timeEl) {
+            timeEl.textContent = img.created_at
+                ? new Date(img.created_at).toLocaleString()
+                : '--';
+        }
+        if (gpsEl) {
+            if (img.gps_lat != null && img.gps_lng != null) {
+                gpsEl.textContent = `${Number(img.gps_lat).toFixed(6)}, ${Number(img.gps_lng).toFixed(6)}`;
+            } else {
+                gpsEl.textContent = '--';
+            }
+        }
+        if (descEl) {
+            descEl.textContent = img.description || 'No description';
+        }
+    }
+
+    clearReviewDetail() {
+        this.selectedReviewId = null;
+        const placeholder = document.getElementById('reviewDetailPlaceholder');
+        const content = document.getElementById('reviewDetailContent');
+        if (placeholder) placeholder.hidden = false;
+        if (content) content.hidden = true;
+    }
+
+    prependReviewImage(saved) {
+        if (!saved || !saved.id) return;
+        this.reviewImages = [saved, ...this.reviewImages.filter((img) => img.id !== saved.id)].slice(0, 30);
+        this.renderReviewGrid();
+        this.selectReviewImage(saved.id);
     }
 }

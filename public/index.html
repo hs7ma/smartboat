@@ -323,6 +323,56 @@
             </div>
         </section>
 
+        <section class="section review-section">
+            <div class="section-header">
+                <h2>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                    Image Review
+                </h2>
+                <button type="button" class="badge review-refresh-btn" id="reviewRefreshBtn">Refresh</button>
+            </div>
+            <div class="review-layout">
+                <div class="review-grid" id="reviewGrid">
+                    <div class="review-empty" id="reviewEmpty">No saved images yet. Captures appear after AI analysis.</div>
+                </div>
+                <div class="review-detail" id="reviewDetail">
+                    <div class="review-detail-placeholder" id="reviewDetailPlaceholder">
+                        Select an image to review analysis details
+                    </div>
+                    <div class="review-detail-content" id="reviewDetailContent" hidden>
+                        <img id="reviewDetailImage" class="review-detail-image" alt="Captured water image">
+                        <div class="review-detail-meta">
+                            <div class="review-meta-row">
+                                <span class="review-meta-label">Quality</span>
+                                <span id="reviewQuality">--</span>
+                            </div>
+                            <div class="review-meta-row">
+                                <span class="review-meta-label">Pollution</span>
+                                <span id="reviewPollution">--</span>
+                            </div>
+                            <div class="review-meta-row">
+                                <span class="review-meta-label">Risk</span>
+                                <span id="reviewRisk">--</span>
+                            </div>
+                            <div class="review-meta-row">
+                                <span class="review-meta-label">Time</span>
+                                <span id="reviewTime">--</span>
+                            </div>
+                            <div class="review-meta-row">
+                                <span class="review-meta-label">GPS</span>
+                                <span id="reviewGps">--</span>
+                            </div>
+                            <p class="review-description" id="reviewDescription"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section class="section controls-section">
             <div class="section-header">
                 <h2>

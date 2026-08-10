@@ -28,16 +28,26 @@ The project has been split from a single ESP32-S3-CAM into two dedicated nodes:
 
 First outdoor fix typically takes 30–90 seconds. Without a fix the controller still sends TDS/turbidity/TOF/rudder with `"gps_fix": false`.
 
+### Image Storage (Supabase)
+- After a successful AI analysis (not `skipped`), the server saves the JPEG to Supabase Storage bucket `boat-images`
+- Metadata is stored in table `captured_images` (`services/image-store.js`)
+- Env vars: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
+- APIs: `GET /api/images`, `GET /api/images/:id`
+- Dashboard **Image Review** section loads the gallery; live Camera Feed is unchanged
+- Last known GPS fix (if any) is attached to the saved row
+
 ### Server Changes
 - `websocket-handler.js` now tracks `controllerClient` and `cameraClient` separately
 - `device_status` messages include a `device` field (`controller` or `camera`)
 - Rudder commands are forwarded only to the controller
 - `sensor_data` may include optional GPS fields: `gps_fix`, `gps_lat`, `gps_lng`, `gps_alt`, `gps_satellites`, `gps_speed`
+- `image_saved` is broadcast to dashboards after a successful persist
 
 ### UI Changes
 - Dashboard shows two device status pills: Controller and Camera
 - Both can connect/disconnect independently
 - Live Map section (Leaflet + OSM) shows boat marker and trail when `gps_fix` is true
+- Image Review gallery shows saved AI-analyzed captures
 
 ### Flashing Instructions
 1. Flash `camera_esp32.ino` to the ESP32-CAM board (select AI-Thinker board in Arduino IDE)
@@ -50,3 +60,4 @@ First outdoor fix typically takes 30–90 seconds. Without a fix the controller 
 - The camera module sends `device_info` with `"device": "camera_module"` on connect
 - The controller module sends `device_info` with `"device": "controller_module"` on connect
 - GPS failure or No Fix must not block obstacle avoidance or other sensors
+- Missing Supabase env vars disables persistence only; live stream and AI still work

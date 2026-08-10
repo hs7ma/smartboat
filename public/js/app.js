@@ -45,6 +45,21 @@ ws.onMessage = (data) => {
             flashElement(document.querySelector('.ai-section'));
             break;
 
+        case 'image_saved':
+            ui.prependReviewImage({
+                id: data.id,
+                public_url: data.public_url,
+                water_quality: data.water_quality,
+                pollution_level: data.pollution_level,
+                risk_level: data.risk_level,
+                created_at: data.created_at,
+                description: data.description || null,
+                gps_lat: data.gps_lat,
+                gps_lng: data.gps_lng
+            });
+            flashElement(document.querySelector('.review-section'));
+            break;
+
         case 'ai_analysis_error':
             console.error('[AI] Analysis error:', data.error);
             document.getElementById('aiWaterQuality').textContent = 'Analysis Error';

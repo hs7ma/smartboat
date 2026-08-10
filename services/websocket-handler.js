@@ -1,13 +1,17 @@
 const WebSocket = require('ws');
 const OpenAIService = require('./openai-service');
+const ImageStore = require('./image-store');
 
 class WebSocketHandler {
     constructor(server) {
         this.wss = new WebSocket.Server({ server, path: '/ws', maxPayload: 10 * 1024 * 1024 });
         this.openaiService = new OpenAIService();
+        this.imageStore = new ImageStore();
         this.controllerClient = null;
         this.cameraClient = null;
         this.dashboardClients = new Set();
+        this.lastCameraImage = null;
+        this.lastGps = null;
 
         this.wss.on('connection', (ws, req) => this.handleConnection(ws, req));
 
@@ -124,6 +128,14 @@ class WebSocketHandler {
     handleSensorData(message) {
         try {
             const data = JSON.parse(message);
+            if (data.gps_fix && data.gps_lat != null && data.gps_lng != null) {
+                const lat = Number(data.gps_lat);
+                const lng = Number(data.gps_lng);
+                if (Number.isFinite(lat) && Number.isFinite(lng)) {
+                    this.lastGps = { lat, lng };
+                }
+            }
+
             this.broadcastToDashboards(JSON.stringify({
                 type: 'sensor_data',
                 tds: data.tds,
@@ -148,6 +160,7 @@ class WebSocketHandler {
             const data = JSON.parse(message);
             if (data.image) {
                 console.log('[WS] Image received from camera module, size:', data.image.length);
+                this.lastCameraImage = data.image;
 
                 this.broadcastToDashboards(JSON.stringify({
                     type: 'camera_image',
@@ -172,6 +185,12 @@ class WebSocketHandler {
                 ...analysis,
                 timestamp: Date.now()
             }));
+
+            if (analysis.water_quality && analysis.water_quality !== 'skipped') {
+                this.persistAnalyzedImage(base64Image, analysis).catch((err) => {
+                    console.error('[ImageStore] Save failed:', err.message);
+                });
+            }
         } catch (err) {
             console.error('[AI] Analysis failed:', err.message);
             this.broadcastToDashboards(JSON.stringify({
@@ -180,6 +199,28 @@ class WebSocketHandler {
                 timestamp: Date.now()
             }));
         }
+    }
+
+    async persistAnalyzedImage(base64Image, analysis) {
+        if (!this.imageStore.isEnabled()) return null;
+
+        const saved = await this.imageStore.save(base64Image, analysis, this.lastGps);
+        if (saved) {
+            this.broadcastToDashboards(JSON.stringify({
+                type: 'image_saved',
+                id: saved.id,
+                public_url: saved.public_url,
+                water_quality: saved.water_quality,
+                pollution_level: saved.pollution_level,
+                risk_level: saved.risk_level,
+                description: saved.description,
+                gps_lat: saved.gps_lat,
+                gps_lng: saved.gps_lng,
+                created_at: saved.created_at,
+                timestamp: Date.now()
+            }));
+        }
+        return saved;
     }
 
     broadcastToDashboards(message) {
