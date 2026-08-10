@@ -3,16 +3,32 @@ const crypto = require('crypto');
 
 const BUCKET = 'boat-images';
 
+function cleanEnv(value) {
+    if (value == null) return '';
+    let v = String(value).trim();
+    if (
+        (v.startsWith('"') && v.endsWith('"')) ||
+        (v.startsWith("'") && v.endsWith("'"))
+    ) {
+        v = v.slice(1, -1).trim();
+    }
+    return v;
+}
+
 class ImageStore {
     constructor() {
         this.client = null;
         this.enabled = false;
 
-        const url = process.env.SUPABASE_URL;
-        const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        const url = cleanEnv(process.env.SUPABASE_URL);
+        const key = cleanEnv(process.env.SUPABASE_SERVICE_ROLE_KEY);
 
         if (!url || !key) {
-            console.warn('[ImageStore] Supabase not configured — image persistence disabled');
+            const missing = [
+                !url ? 'SUPABASE_URL' : null,
+                !key ? 'SUPABASE_SERVICE_ROLE_KEY' : null
+            ].filter(Boolean).join(', ');
+            console.warn(`[ImageStore] Supabase not configured — missing ${missing}`);
             return;
         }
 
