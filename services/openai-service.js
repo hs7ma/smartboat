@@ -2,10 +2,27 @@ const OpenAI = require('openai');
 
 class OpenAIService {
     constructor() {
-        this.client = new OpenAI({
-            apiKey: process.env.OPENAI_API_KEY,
-        });
-        this.model = process.env.OPENAI_MODEL || 'gpt-4o';
+        this.apiKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || '';
+        this.isGeminiDirect = this.apiKey.startsWith('AIzaSy') || this.apiKey.startsWith('AQ.') || (!this.apiKey.startsWith('sk-') && this.apiKey.length > 10);
+        this.isOpenRouter = this.apiKey.startsWith('sk-or-v1-') || !!process.env.OPENAI_BASE_URL;
+
+        if (this.isGeminiDirect) {
+            this.model = process.env.OPENAI_MODEL || process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
+            console.log(`[AI Service] Initialized using Google Gemini Direct (${this.model}) - Free Tier`);
+        } else {
+            const options = { apiKey: this.apiKey };
+            if (this.isOpenRouter) {
+                options.baseURL = process.env.OPENAI_BASE_URL || 'https://openrouter.ai/api/v1';
+                options.defaultHeaders = {
+                    'HTTP-Referer': 'https://smartboat-production.up.railway.app',
+                    'X-Title': 'Tigris Eye Water Quality Monitor'
+                };
+            }
+            this.client = new OpenAI(options);
+            this.model = process.env.OPENAI_MODEL || (this.isOpenRouter ? 'google/gemini-flash-1.5-8b' : 'gpt-4o');
+            console.log(`[AI Service] Initialized using ${this.isOpenRouter ? 'OpenRouter' : 'OpenAI Direct'} with model: ${this.model}`);
+        }
+
         this.lastAnalysisTime = 0;
         this.minInterval = 8000;
     }
@@ -13,7 +30,7 @@ class OpenAIService {
     async analyzeWaterImage(base64Image) {
         const now = Date.now();
         if (now - this.lastAnalysisTime < this.minInterval) {
-            console.log('[OpenAI] Skipping - rate limit');
+            console.log('[AI Service] Skipping - rate limit');
             return {
                 water_quality: 'skipped',
                 pollution_level: 0,
@@ -53,33 +70,72 @@ Focus on:
 All text fields MUST be in English only.`;
 
         try {
-            const response = await this.client.chat.completions.create({
-                model: this.model,
-                messages: [
-                    {
-                        role: 'user',
-                        content: [
-                            { type: 'text', text: prompt },
-                            {
-                                type: 'image_url',
-                                image_url: {
-                                    url: `data:image/jpeg;base64,${base64Image}`,
-                                    detail: 'auto'
-                                }
-                            }
-                        ]
-                    }
-                ],
-                max_tokens: 1000,
-                temperature: 0.3
-            });
+            let content = '';
 
-            const content = response.choices[0].message.content.trim();
-            console.log('[OpenAI] Raw response length:', content.length);
+            if (this.isGeminiDirect) {
+                // Call Google Gemini REST API directly
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [
+                            {
+                                parts: [
+                                    { text: prompt },
+                                    {
+                                        inline_data: {
+                                            mime_type: 'image/jpeg',
+                                            data: base64Image
+                                        }
+                                    }
+                                ]
+                            }
+                        ],
+                        generationConfig: {
+                            temperature: 0.3,
+                            maxOutputTokens: 1000
+                        }
+                    })
+                });
+
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error(`Gemini API error (${res.status}): ${errText}`);
+                }
+
+                const data = await res.json();
+                content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            } else {
+                const response = await this.client.chat.completions.create({
+                    model: this.model,
+                    messages: [
+                        {
+                            role: 'user',
+                            content: [
+                                { type: 'text', text: prompt },
+                                {
+                                    type: 'image_url',
+                                    image_url: {
+                                        url: `data:image/jpeg;base64,${base64Image}`,
+                                        detail: 'auto'
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    max_tokens: 1000,
+                    temperature: 0.3
+                });
+
+                content = response.choices[0].message.content.trim();
+            }
+
+            console.log('[AI Service] Raw response length:', content.length);
 
             const jsonMatch = content.match(/\{[\s\S]*\}/);
             if (!jsonMatch) {
-                console.error('[OpenAI] No JSON found in response:', content.substring(0, 200));
+                console.error('[AI Service] No JSON found in response:', content.substring(0, 200));
                 throw new Error('No JSON found in AI response');
             }
 
@@ -87,8 +143,8 @@ All text fields MUST be in English only.`;
             try {
                 analysis = JSON.parse(jsonMatch[0]);
             } catch (parseErr) {
-                console.error('[OpenAI] JSON parse error:', parseErr.message);
-                console.error('[OpenAI] JSON string:', jsonMatch[0].substring(0, 200));
+                console.error('[AI Service] JSON parse error:', parseErr.message);
+                console.error('[AI Service] JSON string:', jsonMatch[0].substring(0, 200));
                 throw new Error('Failed to parse AI response as JSON');
             }
 
@@ -105,7 +161,7 @@ All text fields MUST be in English only.`;
             };
 
         } catch (err) {
-            console.error('[OpenAI] Error:', err.message);
+            console.error('[AI Service] Error:', err.message);
             throw err;
         }
     }

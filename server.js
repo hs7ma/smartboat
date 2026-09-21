@@ -21,7 +21,7 @@ app.get('/api/status', (req, res) => {
         controller_connected: wsHandler.controllerClient !== null,
         camera_connected: wsHandler.cameraClient !== null,
         dashboard_clients: wsHandler.dashboardClients.size,
-        openai_configured: !!process.env.OPENAI_API_KEY,
+        openai_configured: !!(process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY),
         image_store_configured: imageStore.isEnabled(),
         timestamp: Date.now()
     });
@@ -78,11 +78,12 @@ app.get('*', (req, res) => {
 });
 
 server.listen(PORT, '0.0.0.0', () => {
+    const aiConfigured = !!(process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY);
     console.log(`========================================`);
     console.log(`  Tigris eye Server`);
     console.log(`  HTTP: http://localhost:${PORT}`);
     console.log(`  WebSocket: ws://localhost:${PORT}/ws`);
-    console.log(`  OpenAI: ${process.env.OPENAI_API_KEY ? 'Configured' : 'NOT configured'}`);
+    console.log(`  AI Service: ${aiConfigured ? 'Configured' : 'NOT configured'}`);
     console.log(`  ImageStore: ${imageStore.isEnabled() ? 'Configured' : 'NOT configured'}`);
     console.log(`========================================`);
 });
