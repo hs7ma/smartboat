@@ -2,7 +2,18 @@ const OpenAI = require('openai');
 
 class OpenAIService {
     constructor() {
-        this.apiKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || '';
+        this.apiKey = (process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || process.env.AI_API_KEY || '').trim();
+        this.enabled = !!this.apiKey;
+        this.client = null;
+
+        if (!this.enabled) {
+            console.warn('[AI Service] No API key configured (GEMINI_API_KEY or OPENAI_API_KEY missing) - AI image analysis will be skipped until configured');
+            this.model = 'none';
+            this.lastAnalysisTime = 0;
+            this.minInterval = 8000;
+            return;
+        }
+
         this.isGeminiDirect = this.apiKey.startsWith('AIzaSy') || this.apiKey.startsWith('AQ.') || (!this.apiKey.startsWith('sk-') && this.apiKey.length > 10);
         this.isOpenRouter = this.apiKey.startsWith('sk-or-v1-') || !!process.env.OPENAI_BASE_URL;
 
@@ -28,6 +39,21 @@ class OpenAIService {
     }
 
     async analyzeWaterImage(base64Image) {
+        if (!this.enabled) {
+            console.log('[AI Service] Skipping - AI not configured (missing GEMINI_API_KEY / OPENAI_API_KEY)');
+            return {
+                water_quality: 'skipped',
+                pollution_level: 0,
+                water_color: '--',
+                turbidity_visual: '--',
+                objects_detected: [],
+                contaminants: [],
+                risk_level: 'none',
+                description: 'Analysis skipped - AI API key not configured',
+                recommendation: ''
+            };
+        }
+
         const now = Date.now();
         if (now - this.lastAnalysisTime < this.minInterval) {
             console.log('[AI Service] Skipping - rate limit');
