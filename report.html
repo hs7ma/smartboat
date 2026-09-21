@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>Tigris Eye - تقرير النظام</title>
+<style>
+  @font-face {
+    font-family: 'Cairo';
+    src: url('https://fonts.gstatic.com/s/cairo/v28/SLXgc1nY6HkvangtZmpQdkhzfH5lkSs2SgR0CmsZ.woff2') format('woff2');
+    font-weight: 400 900;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Tajawal';
+    src: url('https://fonts.gstatic.com/s/tajawal/v11/Iurf6YBj-oCadkERTP2sLX5eT9M.woff2') format('woff2');
+    font-weight: 400 900;
+    font-display: swap;
+  }
+
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  html { font-size: 14px; }
+
+  body {
+    font-family: 'Tajawal', 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+    background: #ffffff;
+    color: #1a1a2e;
+    direction: rtl;
+    font-size: 13px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 20mm 18mm;
+    background: white;
+    page-break-after: always;
+    page-break-inside: avoid;
+    position: relative;
+    overflow: hidden;
+  }
+  .page:last-child { page-break-after: auto; }
+
+  /* ─── Cover ─── */
+  .cover {
+    background: #0f172a;
+    color: white;
+    padding: 0;
+    display: block;
+  }
+  .cover-inner {
+    padding: 60mm 20mm;
+    text-align: center;
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0891b2 100%);
+    min-height: 297mm;
+  }
+  .cover h1 {
+    font-size: 56px;
+    font-weight: 900;
+    margin: 20px 0 10px;
+    letter-spacing: 1px;
+  }
+  .cover .subtitle {
+    font-size: 22px;
+    font-weight: 400;
+    opacity: 0.9;
+    margin-top: 15px;
+  }
+  .cover .divider {
+    width: 100px;
+    height: 5px;
+    background: #0891b2;
+    margin: 35px auto;
+    border: none;
+    border-radius: 3px;
+  }
+  .cover .meta {
+    font-size: 16px;
+    opacity: 0.7;
+    line-height: 2.2;
+  }
+  .cover .logo-box {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 10px;
+    border: 4px solid #0891b2;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cover .logo-box svg { width: 70px; height: 70px; }
+
+  /* ─── Headings ─── */
+  h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 18px;
+    padding-bottom: 8px;
+    border-bottom: 4px solid #0891b2;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1e3a5f;
+    margin: 16px 0 8px;
+    page-break-after: avoid;
+  }
+  h4 { font-size: 14px; font-weight: 700; margin-bottom: 5px; color: #1e3a5f; }
+  p { margin-bottom: 8px; }
+  ul, ol { margin: 6px 20px 12px; }
+  li { margin-bottom: 4px; }
+
+  /* ─── Tables ─── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 16px;
+    font-size: 12px;
+    page-break-inside: avoid;
+  }
+  thead {
+    background: #1e3a5f;
+    color: white;
+  }
+  thead th {
+    padding: 10px 10px;
+    text-align: right;
+    font-weight: 700;
+    border: 1px solid #1e3a5f;
+  }
+  tbody td {
+    padding: 8px 10px;
+    border: 1px solid #cbd5e1;
+  }
+  tbody tr:nth-child(even) { background: #f1f5f9; }
+
+  /* ─── Cards ─── */
+  .card {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-right: 5px solid #2563eb;
+    padding: 14px 18px;
+    margin-bottom: 12px;
+    page-break-inside: avoid;
+    border-radius: 4px;
+  }
+  .card.cyan { border-right-color: #0891b2; }
+  .card.amber { border-right-color: #d97706; }
+  .card.green { border-right-color: #059669; }
+  .card.red { border-right-color: #dc2626; }
+
+  /* ─── Code ─── */
+  pre {
+    font-family: 'Consolas', 'Courier New', monospace;
+    direction: ltr;
+    text-align: left;
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 14px 16px;
+    border-radius: 5px;
+    font-size: 11px;
+    margin: 10px 0;
+    page-break-inside: avoid;
+    overflow-x: hidden;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  code {
+    font-family: 'Consolas', 'Courier New', monospace;
+    direction: ltr;
+    background: #e2e8f0;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+  pre code { background: none; padding: 0; color: inherit; }
+
+  /* ─── Badges ─── */
+  .badge {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    margin: 1px 2px;
+  }
+  .badge.green { background: #d1fae5; color: #065f46; }
+  .badge.red { background: #fee2e2; color: #991b1b; }
+  .badge.blue { background: #dbeafe; color: #1e40af; }
+  .badge.cyan { background: #cffafe; color: #155e75; }
+  .badge.amber { background: #fef3c7; color: #92400e; }
+
+  /* ─── Status Grid ─── */
+  .status-grid {
+    display: table;
+    width: 100%;
+    margin: 14px 0;
+  }
+  .status-row { display: table-row; }
+  .status-item {
+    display: table-cell;
+    width: 50%;
+    border: 2px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 16px 10px;
+    text-align: center;
+  }
+  .status-item .label { font-size: 12px; color: #64748b; margin-bottom: 4px; }
+  .status-item .value { font-size: 16px; font-weight: 700; }
+
+  /* ─── Flow ─── */
+  .flow {
+    text-align: center;
+    margin: 14px 0;
+    page-break-inside: avoid;
+  }
+  .flow-node {
+    display: inline-block;
+    background: white;
+    border: 2px solid #2563eb;
+    border-radius: 8px;
+    padding: 10px 16px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 12px;
+    margin: 4px;
+    min-width: 120px;
+    vertical-align: middle;
+  }
+  .flow-node.cyan { border-color: #0891b2; }
+  .flow-node small { font-weight: 400; font-size: 10px; display: block; margin-top: 2px; color: #64748b; }
+  .flow-arrow { font-size: 20px; color: #94a3b8; margin: 0 6px; vertical-align: middle; }
+
+  /* ─── Check List ─── */
+  .check-list { list-style: none; margin-right: 0; padding-right: 0; }
+  .check-list li {
+    padding: 6px 28px 6px 0;
+    position: relative;
+  }
+  .check-list li::before {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 8px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #d1fae5;
+    border: 2px solid #059669;
+  }
+  .check-list li::after {
+    content: '\2713';
+    position: absolute;
+    right: 4px;
+    top: 4px;
+    color: #059669;
+    font-size: 11px;
+    font-weight: 900;
+  }
+  .check-list li.warn::before { background: #fef3c7; border-color: #d97706; }
+  .check-list li.warn::after { content: '!'; color: #d97706; right: 6px; }
+
+  /* ─── TOC ─── */
+  .toc-item {
+    display: table;
+    width: 100%;
+    padding: 10px 0;
+    border-bottom: 1px dashed #cbd5e1;
+  }
+  .toc-item a {
+    display: table-cell;
+    color: #1e3a5f;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    vertical-align: middle;
+  }
+  .toc-item .num {
+    display: table-cell;
+    width: 40px;
+    height: 36px;
+    text-align: center;
+    vertical-align: middle;
+  }
+  .toc-item .num span {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    line-height: 28px;
+    border-radius: 50%;
+    background: #eff6ff;
+    color: #2563eb;
+    font-weight: 700;
+    font-size: 13px;
+    border: 2px solid #bfdbfe;
+  }
+
+  .page-num {
+    position: absolute;
+    bottom: 8mm;
+    left: 18mm;
+    font-size: 10px;
+    color: #94a3b8;
+  }
+
+  .print-btn {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 9999;
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 14px 30px;
+    border-radius: 8px;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(37,99,235,0.4);
+  }
+  .print-btn:hover { background: #1d4ed8; }
+
+  @media print {
+    .print-btn { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<button class="print-btn" onclick="setTimeout(function(){window.print()},500)">طباعة / حفظ PDF</button>
+
+<!-- ════ COVER ════ -->
+<div class="page cover">
+  <div class="cover-inner">
+    <div class="logo-box">
+      <svg viewBox="0 0 100 100" fill="none">
+        <path d="M28 58 C28 58 34 48 50 48 C66 48 72 58 72 58" stroke="#60a5fa" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <path d="M24 66 C24 66 32 58 50 58 C68 58 76 66 76 66" stroke="#0891b2" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <path d="M50 22 L50 48 M42 30 L50 22 L58 30" stroke="#60a5fa" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="50" cy="50" r="4" fill="#0891b2"/>
+      </svg>
+    </div>
+    <h1>Tigris Eye</h1>
+    <p class="subtitle">نظام مراقبة جودة مياه الأنهار بالذكاء الاصطناعي</p>
+    <hr class="divider">
+    <div class="meta">
+      <p>تقرير فني شامل عن النظام</p>
+      <p>النسخة 1.0 — يونيو 2026</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════ TOC ════ -->
+<div class="page">
+  <h2>المحتويات</h2>
+  <div style="margin-top:16px">
+    <div class="toc-item"><a>1. نظرة عامة على النظام</a><div class="num"><span>1</span></div></div>
+    <div class="toc-item"><a>2. المعمارية العامة</a><div class="num"><span>2</span></div></div>
+    <div class="toc-item"><a>3. المكونات المادية (Firmware)</a><div class="num"><span>3</span></div></div>
+    <div class="toc-item"><a>4. الخادم السحابي (Backend)</a><div class="num"><span>4</span></div></div>
+    <div class="toc-item"><a>5. لوحة التحكم (Dashboard)</a><div class="num"><span>5</span></div></div>
+    <div class="toc-item"><a>6. النشر والتشغيل</a><div class="num"><span>6</span></div></div>
+    <div class="toc-item"><a>7. الإصلاحات المنجزة</a><div class="num"><span>7</span></div></div>
+    <div class="toc-item"><a>8. جاهزية النظام</a><div class="num"><span>8</span></div></div>
+    <div class="toc-item"><a>9. تحسينات مستقبلية مقترحة</a><div class="num"><span>9</span></div></div>
+  </div>
+  <div class="page-num">2</div>
+</div>
+
+<!-- ════ 1. OVERVIEW ════ -->
+<div class="page">
+  <h2>1. نظرة عامة على النظام</h2>
+  <p><strong>Tigris Eye</strong> هو نظام متكامل لمراقبة جودة مياه الأنهار يعتمد على معمارية موزعة من ثلاث طبقات: روبوت ذكي يطفو على سطح الماء، خادم سحابي، ولوحة تحكم ويب تفاعلية. يقوم النظام بجمع البيانات الحسية وتحليل الصور بالذكاء الاصطناعي (OpenAI GPT-4o) وتوجيه حركة القارب ذاتياً عبر تجنب العوائق.</p>
+
+  <div class="card">
+    <h4>المعلومات الأساسية</h4>
+    <table>
+      <tr><td style="width:28%"><strong>اسم المشروع</strong></td><td>Tigris Eye</td></tr>
+      <tr><td><strong>المستودع</strong></td><td style="direction:ltr;text-align:left">github.com/hs7ma/smartboat</td></tr>
+      <tr><td><strong>الرابط المباشر</strong></td><td style="direction:ltr;text-align:left">smartboat-production.up.railway.app</td></tr>
+      <tr><td><strong>الترخيص</strong></td><td>خاص</td></tr>
+      <tr><td><strong>تاريخ التقرير</strong></td><td>23 يونيو 2026</td></tr>
+    </table>
+  </div>
+
+  <h3>الأهداف الرئيسية</h3>
+  <ul>
+    <li>قياس جودة المياه عبر مستشعرات TDS والعكارة ومسافة الليزر</li>
+    <li>التقاط صور دورية لسطح الماء وتحليلها بالذكاء الاصطناعي</li>
+    <li>تجنب العوائق تلقائياً عبر التحكم الذكي في زاوية الدفة</li>
+    <li>عرض البيانات اللحظية ونتائج التحليل في لوحة تحكم ويب</li>
+    <li>النشر السحابي على Railway لتمكين الوصول من أي مكان</li>
+  </ul>
+  <div class="page-num">3</div>
+</div>
+
+<!-- ════ 2. ARCHITECTURE ════ -->
+<div class="page">
+  <h2>2. المعمارية العامة</h2>
+  <p>يتكون النظام من ثلاث طبقات مترابطة عبر WebSocket Secure (WSS) مع شهادة TLS من Railway:</p>
+
+  <div class="flow">
+    <span class="flow-node">ESP32-S3<br><small>التحكم والاستشعار</small></span>
+    <span class="flow-arrow">↔</span>
+    <span class="flow-node cyan">خادم Railway<br><small>WebSocket + AI</small></span>
+    <span class="flow-arrow">↔</span>
+    <span class="flow-node">ESP32-CAM<br><small>التقاط الصور</small></span>
+  </div>
+
+  <div class="flow" style="margin-top:8px">
+    <span class="flow-node cyan">لوحة التحكم<br><small>المتصفح</small></span>
+    <span class="flow-arrow">↕</span>
+    <span class="flow-node cyan">خادم Railway</span>
+  </div>
+
+  <h3>تدفق البيانات</h3>
+
+  <div class="card cyan">
+    <h4>اتصال الأجهزة (WSS)</h4>
+    <p>تتصل وحدتا ESP32 بخادم Railway عبر WebSocket Secure على البورت 443 باستخدام <code>beginSSL()</code>. يتم تسجيل كل وحدة عبر رسالة <code>device_info</code> تحتوي على معرف الجهاز وإصدار السيرفر.</p>
+  </div>
+
+  <div class="card green">
+    <h4>تدفق البيانات الحسية</h4>
+    <p>يرسل الـ Controller بيانات الاستشعار (TDS، العكارة، المسافة) كل ثانية عبر WebSocket. يقوم الخادم بإعادة بثها فوراً إلى جميع لوحات التحكم المتصلة.</p>
+  </div>
+
+  <div class="card amber">
+    <h4>تدفق تحليل الصور (AI)</h4>
+    <p>تلتقط ESP32-CAM صورة كل 10 ثوانٍ ثم تُرسل للخادم الذي يمررها للوحة التحكم ويستدعي OpenAI GPT-4o Vision. النتيجة تُعاد بصيغة JSON وتُعرض في لوحة التحكم مع Rate Limit لـ 8 ثوانٍ بين التحليلات.</p>
+  </div>
+
+  <div class="card">
+    <h4>بوابة التحكم (Rudder Commands)</h4>
+    <p>تُرسل أوامر زاوية الدفة من لوحة التحكم عبر WebSocket ثم يوجّهها الخادم فقط إلى وحدة Controller (وليس Camera) ليُحرّك السيرفو فوراً.</p>
+  </div>
+  <div class="page-num">4</div>
+</div>
+
+<!-- ════ 3. FIRMWARE ════ -->
+<div class="page">
+  <h2>3. المكونات المادية (Firmware)</h2>
+
+  <h3>3.1 وحدة التحكم — ESP32-S3</h3>
+  <table>
+    <thead><tr><th>العنصر</th><th>القيمة</th></tr></thead>
+    <tbody>
+      <tr><td>اللوحة</td><td>ESP32-S3 Dev Module</td></tr>
+      <tr><td>الملف</td><td style="direction:ltr;text-align:left">tigris_eye_s3_controller.ino (436 سطر)</td></tr>
+      <tr><td>المعرف</td><td style="direction:ltr;text-align:left">controller_module</td></tr>
+      <tr><td>المكتبات</td><td style="direction:ltr;text-align:left">WiFi, WebSocketsClient, VL53L0X, Wire, ESP32Servo</td></tr>
+      <tr><td>الخادم</td><td style="direction:ltr;text-align:left">smartboat-production.up.railway.app:443 (WSS)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>تعيين المنافذ (Pins)</h3>
+  <table>
+    <thead><tr><th>GPIO</th><th>الجهاز المتصل</th></tr></thead>
+    <tbody>
+      <tr><td style="text-align:center">GPIO 1</td><td>مستشعر TDS (تناظري)</td></tr>
+      <tr><td style="text-align:center">GPIO 2</td><td>مستشعر العكارة (تناظري)</td></tr>
+      <tr><td style="text-align:center">GPIO 4</td><td>I2C SDA (VL53L0X)</td></tr>
+      <tr><td style="text-align:center">GPIO 5</td><td>I2C SCL (VL53L0X)</td></tr>
+      <tr><td style="text-align:center">GPIO 14</td><td>محرك السيرفو (الدفة)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>مناطق تجنب العوائق</h3>
+  <div class="card red"><h4>الخطر — أقل من 30 سم</h4><p>انعطاف حاد (45°) في الاتجاه المعاكس فوراً.</p></div>
+  <div class="card amber"><h4>التحذير — 30 إلى 60 سم</h4><p>انعطاف متوسط (65°) في الاتجاه المعاكس.</p></div>
+  <div class="card green"><h4>الأمان — 60 إلى 150 سم</h4><p>انعطاف تدريجي متناقص حتى العودة للوسط.</p></div>
+  <div class="page-num">5</div>
+</div>
+
+<div class="page">
+  <h3>3.2 وحدة الكاميرا — ESP32-CAM</h3>
+  <table>
+    <thead><tr><th>العنصر</th><th>القيمة</th></tr></thead>
+    <tbody>
+      <tr><td>اللوحة</td><td>ESP32-CAM (AI-Thinker)</td></tr>
+      <tr><td>الملف</td><td style="direction:ltr;text-align:left">camera_esp32.ino (353 سطر)</td></tr>
+      <tr><td>المعرف</td><td style="direction:ltr;text-align:left">camera_module</td></tr>
+      <tr><td>الكاميرا</td><td>OV2640</td></tr>
+      <tr><td>الخادم</td><td style="direction:ltr;text-align:left">smartboat-production.up.railway.app:443 (WSS)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>إعدادات الكاميرا حسب PSRAM</h3>
+  <table>
+    <thead><tr><th>المعامل</th><th>مع PSRAM</th><th>بدون PSRAM</th></tr></thead>
+    <tbody>
+      <tr><td>دقة الإطار</td><td>VGA (640×480)</td><td>QVGA (320×240)</td></tr>
+      <tr><td>جودة JPEG</td><td>10</td><td>12</td></tr>
+      <tr><td>عدد Buffers</td><td>2</td><td>1</td></tr>
+      <tr><td>Grab Mode</td><td colspan="2" style="text-align:center">LATEST</td></tr>
+    </tbody>
+  </table>
+
+  <h3>دورة عمل الكاميرا</h3>
+  <div class="flow">
+    <span class="flow-node">التقاط صورة<br><small>10 ثوانٍ</small></span>
+    <span class="flow-arrow">←</span>
+    <span class="flow-node cyan">ترميز Base64</span>
+    <span class="flow-arrow">←</span>
+    <span class="flow-node">إرسال WSS<br><small>JSON</small></span>
+  </div>
+  <div class="page-num">6</div>
+</div>
+
+<!-- ════ 4. BACKEND ════ -->
+<div class="page">
+  <h2>4. الخادم السحابي (Backend)</h2>
+
+  <h3>التقنيات المستخدمة</h3>
+  <table>
+    <thead><tr><th>التقنية</th><th>الإصدار</th><th>الدور</th></tr></thead>
+    <tbody>
+      <tr><td>Node.js</td><td style="direction:ltr">≥ 18</td><td>بيئة التشغيل</td></tr>
+      <tr><td>Express</td><td style="direction:ltr">4.21</td><td>خادم HTTP</td></tr>
+      <tr><td>ws</td><td style="direction:ltr">8.18</td><td>خادم WebSocket</td></tr>
+      <tr><td>OpenAI SDK</td><td style="direction:ltr">4.67</td><td>تحليل الصور</td></tr>
+      <tr><td>dotenv</td><td style="direction:ltr">16.4</td><td>متغيرات البيئة</td></tr>
+    </tbody>
+  </table>
+
+  <h3>واجهات API</h3>
+  <table>
+    <thead><tr><th>المسار</th><th>الطريقة</th><th>الدور</th></tr></thead>
+    <tbody>
+      <tr><td style="direction:ltr;text-align:left">/api/status</td><td><span class="badge green">GET</span></td><td>حالة النظام: اتصال الأجهزة و OpenAI</td></tr>
+      <tr><td style="direction:ltr;text-align:left">/api/rudder</td><td><span class="badge blue">POST</span></td><td>إرسال أمر زاوية الدفة (30°–150°)</td></tr>
+      <tr><td style="direction:ltr;text-align:left">/ws</td><td><span class="badge cyan">WS</span></td><td>اتصال ثنائي الاتجاه مع العملاء</td></tr>
+      <tr><td style="direction:ltr;text-align:left">/*</td><td><span class="badge green">GET</span></td><td>تقديم ملفات Dashboard الثابتة</td></tr>
+    </tbody>
+  </table>
+
+  <h3>توجيه رسائل WebSocket</h3>
+  <table>
+    <thead><tr><th>نوع الرسالة</th><th>المصدر</th><th>الوجهة</th></tr></thead>
+    <tbody>
+      <tr><td>device_info</td><td>ESP32</td><td>تسجيل الجهاز</td></tr>
+      <tr><td>dashboard</td><td>المتصفح</td><td>تسجيل لوحة التحكم</td></tr>
+      <tr><td>sensor_data</td><td>Controller</td><td>لوحات التحكم</td></tr>
+      <tr><td>camera_image</td><td>Camera</td><td>لوحات التحكم + OpenAI</td></tr>
+      <tr><td>rudder_command</td><td>لوحة التحكم</td><td>Controller فقط</td></tr>
+      <tr><td>ai_analysis</td><td>OpenAI</td><td>لوحات التحكم</td></tr>
+      <tr><td>ai_analysis_error</td><td>السيرفر</td><td>لوحات التحكم</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top:8px"><strong>الحمولة القصوى:</strong> 10 ميجابايت (لاستيعاب صور Base64 الكبيرة).</p>
+  <div class="page-num">7</div>
+</div>
+
+<div class="page">
+  <h3>خدمة الذكاء الاصطناعي (OpenAI GPT-4o Vision)</h3>
+  <table>
+    <thead><tr><th>الإعداد</th><th>القيمة</th></tr></thead>
+    <tbody>
+      <tr><td>النموذج</td><td style="direction:ltr">gpt-4o</td></tr>
+      <tr><td>Max Tokens</td><td style="direction:ltr">1000</td></tr>
+      <tr><td>Temperature</td><td style="direction:ltr">0.3</td></tr>
+      <tr><td>Image Detail</td><td style="direction:ltr">auto</td></tr>
+      <tr><td>Rate Limit</td><td>8 ثوانٍ بين التحليلات</td></tr>
+    </tbody>
+  </table>
+
+  <h3>مخطط JSON المطلوب من الذكاء الاصطناعي</h3>
+  <pre><code>{
+  "water_quality": "clean|slightly_polluted|polluted|heavily_polluted|dangerous",
+  "pollution_level": 0-100,
+  "water_color": "string",
+  "turbidity_visual": "clear|slightly_turbid|turbid|very_turbid|opaque",
+  "objects_detected": [],
+  "contaminants": [],
+  "risk_level": "none|low|medium|high|critical",
+  "description": "string",
+  "recommendation": "string"
+}</code></pre>
+
+  <h3>التحقق من السلامة</h3>
+  <ul>
+    <li><code>Array.isArray()</code> للمصفوفات (objects_detected, contaminants)</li>
+    <li><code>typeof === 'number'</code> للتحقق من pollution_level</li>
+    <li><code>try/catch</code> مزدوج لـ JSON.parse مع تسجيل تفصيلي</li>
+    <li>جميع النصوص باللغة الإنجليزية فقط</li>
+  </ul>
+  <div class="page-num">8</div>
+</div>
+
+<!-- ════ 5. DASHBOARD ════ -->
+<div class="page">
+  <h2>5. لوحة التحكم (Dashboard)</h2>
+
+  <h3>الملفات</h3>
+  <table>
+    <thead><tr><th>الملف</th><th>الحجم</th><th>الدور</th></tr></thead>
+    <tbody>
+      <tr><td style="direction:ltr;text-align:left">index.html</td><td>384 سطر</td><td>هيكل الصفحة</td></tr>
+      <tr><td style="direction:ltr;text-align:left">style.css</td><td>1186 سطر</td><td>التصميم البصري</td></tr>
+      <tr><td style="direction:ltr;text-align:left">app.js</td><td>73 سطر</td><td>منطق الرسائل</td></tr>
+      <tr><td style="direction:ltr;text-align:left">ui-components.js</td><td>240 سطر</td><td>مكونات العرض</td></tr>
+      <tr><td style="direction:ltr;text-align:left">websocket-client.js</td><td>61 سطر</td><td>اتصال WebSocket</td></tr>
+    </tbody>
+  </table>
+
+  <h3>أقسام العرض</h3>
+
+  <div class="card cyan"><h4>Camera Feed</h4><p>عرض صور Base64 مباشرة من ESP32-CAM مع مؤشر LIVE وطابع زمني لكل صورة.</p></div>
+  <div class="card"><h4>AI Analysis</h4><p>حلقة نتائج Score (0–100) ملوّنة حسب الجودة، شريط تلوث (0%–100%)، 5 حقول تفصيلية، وصف نصي وتوصية.</p></div>
+  <div class="card green"><h4>Sensor Data</h4><p>ثلاث بطاقات تفاعلية: TDS (مقياس دائري ppm)، العكارة (مقياس دائري NTU)، المسافة (شريط أفقي ملوّن).</p></div>
+  <div class="card amber"><h4>Rudder Control</h4><p>بوصلة تفاعلية SVG مع إبرة دوارة، 5 أزرار توجيه، مؤشر تجنب العوائق التلقائي.</p></div>
+
+  <h3>خريطة جودة الماء (Score Logic)</h3>
+  <table>
+    <thead><tr><th>الحالة</th><th>Score</th><th>اللون</th></tr></thead>
+    <tbody>
+      <tr><td>نظيف (Clean)</td><td>90</td><td><span style="color:#059669;font-weight:700">●</span> أخضر</td></tr>
+      <tr><td>ملوث قليلاً</td><td>70</td><td><span style="color:#059669;font-weight:700">●</span> أخضر</td></tr>
+      <tr><td>ملوث</td><td>45</td><td><span style="color:#2563eb;font-weight:700">●</span> أزرق</td></tr>
+      <tr><td>ملوث بشدة</td><td>25</td><td><span style="color:#d97706;font-weight:700">●</span> برتقالي</td></tr>
+      <tr><td>خطر!</td><td>10</td><td><span style="color:#dc2626;font-weight:700">●</span> أحمر</td></tr>
+    </tbody>
+  </table>
+
+  <h3>الاتصال الذكي</h3>
+  <ul>
+    <li>بروتوكول ذكي: <code>wss:</code> على HTTPS / <code>ws:</code> على HTTP</li>
+    <li>إعادة اتصال تلقائية كل 3 ثوانٍ عند الانقطاع</li>
+    <li>علامات حالة مستقلة لكل من Controller و Camera</li>
+  </ul>
+  <div class="page-num">9</div>
+</div>
+
+<!-- ════ 6. DEPLOYMENT ════ -->
+<div class="page">
+  <h2>6. النشر والتشغيل</h2>
+
+  <h3>إعدادات Railway</h3>
+  <table>
+    <thead><tr><th>الإعداد</th><th>القيمة</th></tr></thead>
+    <tbody>
+      <tr><td>الرابط</td><td style="direction:ltr;text-align:left">smartboat-production.up.railway.app</td></tr>
+      <tr><td>الباني (Builder)</td><td style="direction:ltr">nixpacks</td></tr>
+      <tr><td>أمر البدء</td><td style="direction:ltr">node server.js</td></tr>
+      <tr><td>Health Check</td><td style="direction:ltr">/api/status (timeout: 10s)</td></tr>
+      <tr><td>إعادة التشغيل</td><td>على الفشل (3 محاولات كحد أقصى)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>متغيرات البيئة المطلوبة</h3>
+  <pre><code>PORT=3000
+OPENAI_API_KEY=sk-proj-...
+OPENAI_MODEL=gpt-4o</code></pre>
+
+  <h3>الحالة الحالية (23 يونيو 2026)</h3>
+  <div class="status-grid">
+    <div class="status-row">
+      <div class="status-item">
+        <p class="label">الخادم</p>
+        <p class="value" style="color:#059669">آونلاين</p>
+      </div>
+      <div class="status-item" style="border-right:none">
+        <p class="label">OpenAI GPT-4o</p>
+        <p class="value" style="color:#059669">مُكوّن</p>
+      </div>
+    </div>
+    <div class="status-row">
+      <div class="status-item" style="border-top:none">
+        <p class="label">Controller</p>
+        <p class="value" style="color:#dc2626">غير متصل</p>
+      </div>
+      <div class="status-item" style="border:none">
+        <p class="label">Camera</p>
+        <p class="value" style="color:#dc2626">غير متصل</p>
+      </div>
+    </div>
+  </div>
+  <div class="page-num">10</div>
+</div>
+
+<!-- ════ 7. BUG FIXES ════ -->
+<div class="page">
+  <h2>7. الإصلاحات المنجزة</h2>
+
+  <h3>سجل التعديلات (Git)</h3>
+  <table>
+    <thead><tr><th>Commit</th><th>الوصف</th></tr></thead>
+    <tbody>
+      <tr><td style="direction:ltr;font-family:monospace;font-size:11px">9d80982</td><td>إصلاح <code>esp32Client/sendToEsp32</code> إلى <code>controllerClient/sendToController</code></td></tr>
+      <tr><td style="direction:ltr;font-family:monospace;font-size:11px">08b74bc</td><td>إزالة النص العربي، تحسين error handling، max_tokens=1000</td></tr>
+      <tr><td style="direction:ltr;font-family:monospace;font-size:11px">0c07361</td><td>إضافة firmware و gitignore و env.example و AGENTS.md</td></tr>
+      <tr><td style="direction:ltr;font-family:monospace;font-size:11px">85b0515</td><td>الرفع الأولي للمشروع</td></tr>
+    </tbody>
+  </table>
+
+  <h3>الأخطاء الحرجة المُصلَحة</h3>
+
+  <div class="card red"><h4>1. server.js — خصائص غير موجودة</h4><p><code>wsHandler.esp32Client</code> أصبح <code>wsHandler.controllerClient</code> + <code>cameraClient</code><br><code>wsHandler.sendToEsp32()</code> أصبح <code>wsHandler.sendToController()</code></p></div>
+
+  <div class="card amber"><h4>2. openai-service.js — Prompt بالعربية</h4><p>تم إزالة <code>"detailed Arabic description"</code> واستبداله بـ <code>"in English"</code> + شرط صريح: "All text fields MUST be in English only."</p></div>
+
+  <div class="card"><h4>3. openai-service.js — استجابة Rate Limit ناقصة</h4><p>قبل: 3 حقول فقط. بعد: 9 حقول كاملة (water_color، turbidity_visual، objects_detected، إلخ).</p></div>
+
+  <div class="card cyan"><h4>4. ui-components.js — Score خادع</h4><p>قبل: score = 100 عند skipped (يظهر "نظيف"!). بعد: score = 0 عند skipped.</p></div>
+
+  <div class="card green"><h4>5. تحسينات موثوقية OpenAI</h4><ul>
+    <li>max_tokens: 500 إلى 1000 (منع القص)</li>
+    <li>detail: 'low' إلى 'auto' (جودة أفضل)</li>
+    <li>JSON parsing مزدوج try/catch مع تسجيل تفصيلي</li>
+    <li>التحقق من الأنواع: Array.isArray و typeof</li>
+  </ul></div>
+  <div class="page-num">11</div>
+</div>
+
+<!-- ════ 8. READINESS ════ -->
+<div class="page">
+  <h2>8. جاهزية النظام</h2>
+
+  <h3>ما يعمل حالياً</h3>
+  <ul class="check-list">
+    <li>الخادم السحابي على Railway — آونلاين</li>
+    <li>OpenAI GPT-4o Vision API — تم اختباره ومُؤكَّد</li>
+    <li>لوحة التحكم (Dashboard) — تعرض جميع الأقسام</li>
+    <li>WebSocket Secure (WSS) — يعمل من المتصفح</li>
+    <li>Firmware مُحدَّث للاتصال عبر beginSSL()</li>
+  </ul>
+
+  <h3>ما يحتاج تفليش (Flashing)</h3>
+  <ul class="check-list">
+    <li class="warn">ESP32-S3 Controller — تفليش tigris_eye_s3_controller.ino بالنسخة المُحدَّثة</li>
+    <li class="warn">ESP32-CAM Camera — تفليش camera_esp32.ino بالنسخة المُحدَّثة</li>
+  </ul>
+
+  <div class="card red">
+    <h4>تنبيه مهم</h4>
+    <p>الأجهزة لم تُفلَش بالنسخة المُحدَّثة بعد، فهي لا تزال تستخدم IP المحلي القديم <code>192.168.1.177:3000</code> بدلاً من <code>smartboat-production.up.railway.app:443</code>. بدون التفليش، لن تتصل الأجهزة بالخادم السحابي.</p>
+  </div>
+  <div class="page-num">12</div>
+</div>
+
+<!-- ════ 9. FUTURE ════ -->
+<div class="page">
+  <h2>9. تحسينات مستقبلية مقترحة</h2>
+  <table>
+    <thead><tr><th>الأولوية</th><th>التحسين المقترح</th></tr></thead>
+    <tbody>
+      <tr><td style="text-align:center"><span class="badge red">عالية</span></td><td>إضافة مصادقة (JWT) لحماية لوحة التحكم من الوصول غير المصرّح</td></tr>
+      <tr><td style="text-align:center"><span class="badge red">عالية</span></td><td>تسجيل البيانات في قاعدة بيانات (MongoDB / PostgreSQL) للحفاظ على السجل التاريخي</td></tr>
+      <tr><td style="text-align:center"><span class="badge amber">متوسطة</span></td><td>إرسال تنبيهات فورية عند تجاوز عتبات التلوث (إيميل / SMS)</td></tr>
+      <tr><td style="text-align:center"><span class="badge amber">متوسطة</span></td><td>دعم تعدد المستخدمين والصلاحيات (Admin / Viewer)</td></tr>
+      <tr><td style="text-align:center"><span class="badge amber">متوسطة</span></td><td>إضافة خريطة GPS لعرض مسار القارب ونقاط القياس</td></tr>
+      <tr><td style="text-align:center"><span class="badge blue">منخفضة</span></td><td>تطبيق جوال (React Native) بديل للوحة الويب</td></tr>
+      <tr><td style="text-align:center"><span class="badge blue">منخفضة</span></td><td>دعم Picture-in-Picture لعرض الكاميرا أثناء استخدام تطبيقات أخرى</td></tr>
+      <tr><td style="text-align:center"><span class="badge blue">منخفضة</span></td><td>إضافة لوحة رسوم بيانية (Chart.js) لتتبع التغيرات الزمنية</td></tr>
+    </tbody>
+  </table>
+
+  <div style="margin-top:60px;text-align:center;border-top:3px solid #0891b2;padding-top:25px">
+    <p style="font-size:20px;font-weight:700;color:#0f172a">انتهى التقرير</p>
+    <p style="font-size:14px;color:#94a3b8;margin-top:8px">Tigris Eye — يونيو 2026</p>
+  </div>
+  <div class="page-num">13</div>
+</div>
+
+</body>
+</html>

@@ -27,7 +27,6 @@ ws.onMessage = (data) => {
             if (data.rudder_angle !== undefined) {
                 ui.updateRudder(data.rudder_angle);
             }
-            ui.updateGPS(data);
             flashElement(document.querySelector('.tds-card'));
             flashElement(document.querySelector('.turbidity-card'));
             flashElement(document.querySelector('.tof-card'));

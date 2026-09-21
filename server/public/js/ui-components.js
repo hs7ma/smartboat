@@ -1,14 +1,7 @@
 class UIComponents {
     constructor() {
         this.lastTOFDistance = null;
-        this.map = null;
-        this.boatMarker = null;
-        this.trailLine = null;
-        this.trailPoints = [];
-        this.maxTrailPoints = 200;
-        this.defaultCenter = [33.3152, 44.3661]; // Baghdad
         this.generateCompassTicks();
-        this.initMap();
     }
 
     generateCompassTicks() {
@@ -31,95 +24,6 @@ class UIComponents {
             line.setAttribute('y2', y2);
             if (isMajor) line.classList.add('major');
             g.appendChild(line);
-        }
-    }
-
-    initMap() {
-        const mapEl = document.getElementById('boatMap');
-        if (!mapEl || typeof L === 'undefined') return;
-
-        this.map = L.map('boatMap', {
-            zoomControl: true,
-            attributionControl: true
-        }).setView(this.defaultCenter, 12);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        }).addTo(this.map);
-
-        this.trailLine = L.polyline([], {
-            color: '#2563eb',
-            weight: 3,
-            opacity: 0.75
-        }).addTo(this.map);
-
-        // Leaflet needs a size recalc after layout
-        requestAnimationFrame(() => {
-            this.map.invalidateSize();
-        });
-    }
-
-    updateGPS(data) {
-        const badge = document.getElementById('gpsStatusBadge');
-        const overlay = document.getElementById('mapOverlay');
-        const coordsEl = document.getElementById('gpsCoords');
-        const speedAltEl = document.getElementById('gpsSpeedAlt');
-
-        if (!data || !data.gps_fix || data.gps_lat == null || data.gps_lng == null) {
-            if (badge) {
-                badge.textContent = 'No Fix';
-                badge.classList.remove('gps-fix');
-            }
-            if (overlay) overlay.classList.remove('hidden');
-            if (coordsEl) coordsEl.textContent = '--';
-            if (speedAltEl) speedAltEl.textContent = '--';
-            return;
-        }
-
-        const lat = Number(data.gps_lat);
-        const lng = Number(data.gps_lng);
-        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-
-        const sats = data.gps_satellites != null ? data.gps_satellites : '--';
-        if (badge) {
-            badge.textContent = `Fix · ${sats} sats`;
-            badge.classList.add('gps-fix');
-        }
-        if (overlay) overlay.classList.add('hidden');
-
-        if (coordsEl) {
-            coordsEl.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-        }
-        if (speedAltEl) {
-            const speed = data.gps_speed != null ? `${Number(data.gps_speed).toFixed(1)} km/h` : '--';
-            const alt = data.gps_alt != null ? `${Number(data.gps_alt).toFixed(1)} m` : '--';
-            speedAltEl.textContent = `${speed} · ${alt}`;
-        }
-
-        if (!this.map) return;
-
-        const latLng = [lat, lng];
-        if (!this.boatMarker) {
-            this.boatMarker = L.circleMarker(latLng, {
-                radius: 8,
-                color: '#0891b2',
-                weight: 2,
-                fillColor: '#2563eb',
-                fillOpacity: 0.9
-            }).addTo(this.map);
-            this.map.setView(latLng, 16);
-        } else {
-            this.boatMarker.setLatLng(latLng);
-            this.map.panTo(latLng, { animate: true, duration: 0.5 });
-        }
-
-        this.trailPoints.push(latLng);
-        if (this.trailPoints.length > this.maxTrailPoints) {
-            this.trailPoints.shift();
-        }
-        if (this.trailLine) {
-            this.trailLine.setLatLngs(this.trailPoints);
         }
     }
 
