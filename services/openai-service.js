@@ -7,7 +7,7 @@ class OpenAIService {
         this.client = null;
 
         if (!this.enabled) {
-            console.warn('[AI Service] No API key configured (GEMINI_API_KEY or OPENAI_API_KEY missing) - AI image analysis will be skipped until configured');
+            console.warn('[AI Service] No API key configured (GEMINI_API_KEY or OPENAI_API_KEY missing) - AI image analysis disabled until key is added in Railway');
             this.model = 'none';
             this.lastAnalysisTime = 0;
             this.minInterval = 8000;
@@ -21,7 +21,17 @@ class OpenAIService {
             this.model = process.env.OPENAI_MODEL || process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
             console.log(`[AI Service] Initialized using Google Gemini Direct (${this.model}) - Free Tier`);
         } else {
-            const options = { apiKey: this.apiKey };
+            this.model = process.env.OPENAI_MODEL || (this.isOpenRouter ? 'google/gemini-flash-1.5-8b' : 'gpt-4o');
+            console.log(`[AI Service] Initialized using ${this.isOpenRouter ? 'OpenRouter' : 'OpenAI Direct'} with model: ${this.model}`);
+        }
+
+        this.lastAnalysisTime = 0;
+        this.minInterval = 8000;
+    }
+
+    getClient() {
+        if (!this.client && this.enabled && !this.isGeminiDirect) {
+            const options = { apiKey: this.apiKey || 'dummy-key' };
             if (this.isOpenRouter) {
                 options.baseURL = process.env.OPENAI_BASE_URL || 'https://openrouter.ai/api/v1';
                 options.defaultHeaders = {
@@ -30,12 +40,8 @@ class OpenAIService {
                 };
             }
             this.client = new OpenAI(options);
-            this.model = process.env.OPENAI_MODEL || (this.isOpenRouter ? 'google/gemini-flash-1.5-8b' : 'gpt-4o');
-            console.log(`[AI Service] Initialized using ${this.isOpenRouter ? 'OpenRouter' : 'OpenAI Direct'} with model: ${this.model}`);
         }
-
-        this.lastAnalysisTime = 0;
-        this.minInterval = 8000;
+        return this.client;
     }
 
     async analyzeWaterImage(base64Image) {
@@ -133,7 +139,8 @@ All text fields MUST be in English only.`;
                 const data = await res.json();
                 content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
             } else {
-                const response = await this.client.chat.completions.create({
+                const client = this.getClient();
+                const response = await client.chat.completions.create({
                     model: this.model,
                     messages: [
                         {
