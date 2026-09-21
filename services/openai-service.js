@@ -1,37 +1,38 @@
-const OpenAI = require('openai');
+// OpenAI library is loaded lazily only when needed (not at startup)
+// This prevents crashes when OPENAI_API_KEY env var is missing
 
 class OpenAIService {
     constructor() {
         this.apiKey = (process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || process.env.AI_API_KEY || '').trim();
         this.enabled = !!this.apiKey;
         this.client = null;
+        this.isGeminiDirect = false;
+        this.isOpenRouter = false;
 
         if (!this.enabled) {
-            console.warn('[AI Service] No API key configured (GEMINI_API_KEY or OPENAI_API_KEY missing) - AI image analysis disabled until key is added in Railway');
+            console.warn('[AI Service] No API key found — set GEMINI_API_KEY in Railway Variables');
             this.model = 'none';
-            this.lastAnalysisTime = 0;
-            this.minInterval = 8000;
-            return;
-        }
-
-        this.isGeminiDirect = this.apiKey.startsWith('AIzaSy') || this.apiKey.startsWith('AQ.') || (!this.apiKey.startsWith('sk-') && this.apiKey.length > 10);
-        this.isOpenRouter = this.apiKey.startsWith('sk-or-v1-') || !!process.env.OPENAI_BASE_URL;
-
-        if (this.isGeminiDirect) {
-            this.model = process.env.OPENAI_MODEL || process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
-            console.log(`[AI Service] Initialized using Google Gemini Direct (${this.model}) - Free Tier`);
         } else {
-            this.model = process.env.OPENAI_MODEL || (this.isOpenRouter ? 'google/gemini-flash-1.5-8b' : 'gpt-4o');
-            console.log(`[AI Service] Initialized using ${this.isOpenRouter ? 'OpenRouter' : 'OpenAI Direct'} with model: ${this.model}`);
+            this.isGeminiDirect = this.apiKey.startsWith('AIzaSy') || this.apiKey.startsWith('AQ.') || (!this.apiKey.startsWith('sk-') && this.apiKey.length > 10);
+            this.isOpenRouter = this.apiKey.startsWith('sk-or-v1-') || !!process.env.OPENAI_BASE_URL;
+
+            if (this.isGeminiDirect) {
+                this.model = process.env.GEMINI_MODEL || process.env.OPENAI_MODEL || 'gemini-3.5-flash-lite';
+                console.log(`[AI Service] Using Google Gemini Direct (${this.model}) — Free Tier`);
+            } else {
+                this.model = process.env.OPENAI_MODEL || (this.isOpenRouter ? 'google/gemini-flash-1.5-8b' : 'gpt-4o');
+                console.log(`[AI Service] Using ${this.isOpenRouter ? 'OpenRouter' : 'OpenAI'} (${this.model})`);
+            }
         }
 
         this.lastAnalysisTime = 0;
         this.minInterval = 8000;
     }
 
-    getClient() {
-        if (!this.client && this.enabled && !this.isGeminiDirect) {
-            const options = { apiKey: this.apiKey || 'dummy-key' };
+    _getOpenAIClient() {
+        if (!this.client) {
+            const OpenAI = require('openai');
+            const options = { apiKey: this.apiKey };
             if (this.isOpenRouter) {
                 options.baseURL = process.env.OPENAI_BASE_URL || 'https://openrouter.ai/api/v1';
                 options.defaultHeaders = {
@@ -46,32 +47,24 @@ class OpenAIService {
 
     async analyzeWaterImage(base64Image) {
         if (!this.enabled) {
-            console.log('[AI Service] Skipping - AI not configured (missing GEMINI_API_KEY / OPENAI_API_KEY)');
             return {
-                water_quality: 'skipped',
-                pollution_level: 0,
-                water_color: '--',
-                turbidity_visual: '--',
-                objects_detected: [],
-                contaminants: [],
+                water_quality: 'skipped', pollution_level: 0,
+                water_color: '--', turbidity_visual: '--',
+                objects_detected: [], contaminants: [],
                 risk_level: 'none',
-                description: 'Analysis skipped - AI API key not configured',
+                description: 'AI not configured — add GEMINI_API_KEY in Railway',
                 recommendation: ''
             };
         }
 
         const now = Date.now();
         if (now - this.lastAnalysisTime < this.minInterval) {
-            console.log('[AI Service] Skipping - rate limit');
             return {
-                water_quality: 'skipped',
-                pollution_level: 0,
-                water_color: '--',
-                turbidity_visual: '--',
-                objects_detected: [],
-                contaminants: [],
+                water_quality: 'skipped', pollution_level: 0,
+                water_color: '--', turbidity_visual: '--',
+                objects_detected: [], contaminants: [],
                 risk_level: 'none',
-                description: 'Analysis skipped - rate limited, awaiting next cycle',
+                description: 'Rate limited — waiting for next cycle',
                 recommendation: ''
             };
         }
@@ -105,29 +98,18 @@ All text fields MUST be in English only.`;
             let content = '';
 
             if (this.isGeminiDirect) {
-                // Call Google Gemini REST API directly
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
                 const res = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [
-                            {
-                                parts: [
-                                    { text: prompt },
-                                    {
-                                        inline_data: {
-                                            mime_type: 'image/jpeg',
-                                            data: base64Image
-                                        }
-                                    }
-                                ]
-                            }
-                        ],
-                        generationConfig: {
-                            temperature: 0.3,
-                            maxOutputTokens: 1000
-                        }
+                        contents: [{
+                            parts: [
+                                { text: prompt },
+                                { inline_data: { mime_type: 'image/jpeg', data: base64Image } }
+                            ]
+                        }],
+                        generationConfig: { temperature: 0.3, maxOutputTokens: 1000 }
                     })
                 });
 
@@ -139,28 +121,19 @@ All text fields MUST be in English only.`;
                 const data = await res.json();
                 content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
             } else {
-                const client = this.getClient();
+                const client = this._getOpenAIClient();
                 const response = await client.chat.completions.create({
                     model: this.model,
-                    messages: [
-                        {
-                            role: 'user',
-                            content: [
-                                { type: 'text', text: prompt },
-                                {
-                                    type: 'image_url',
-                                    image_url: {
-                                        url: `data:image/jpeg;base64,${base64Image}`,
-                                        detail: 'auto'
-                                    }
-                                }
-                            ]
-                        }
-                    ],
+                    messages: [{
+                        role: 'user',
+                        content: [
+                            { type: 'text', text: prompt },
+                            { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64Image}`, detail: 'auto' } }
+                        ]
+                    }],
                     max_tokens: 1000,
                     temperature: 0.3
                 });
-
                 content = response.choices[0].message.content.trim();
             }
 
@@ -168,18 +141,11 @@ All text fields MUST be in English only.`;
 
             const jsonMatch = content.match(/\{[\s\S]*\}/);
             if (!jsonMatch) {
-                console.error('[AI Service] No JSON found in response:', content.substring(0, 200));
+                console.error('[AI Service] No JSON in response:', content.substring(0, 200));
                 throw new Error('No JSON found in AI response');
             }
 
-            let analysis;
-            try {
-                analysis = JSON.parse(jsonMatch[0]);
-            } catch (parseErr) {
-                console.error('[AI Service] JSON parse error:', parseErr.message);
-                console.error('[AI Service] JSON string:', jsonMatch[0].substring(0, 200));
-                throw new Error('Failed to parse AI response as JSON');
-            }
+            const analysis = JSON.parse(jsonMatch[0]);
 
             return {
                 water_quality: analysis.water_quality || 'unknown',
